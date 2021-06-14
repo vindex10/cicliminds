@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-cicliminds-lib = {git = "https://github.com/vindex10/cicliminds-lib.git"}
+cicliminds-lib = {editable = true, git = "https://github.com/vindex10/cicliminds-lib.git"}
 
 [dev-packages]
 

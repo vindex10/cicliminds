@@ -4,7 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+jupyterlab = "*"
 cicliminds-lib = {editable = true, git = "https://github.com/vindex10/cicliminds-lib.git"}
+matplotlib = "*"
+numpy = "*"
+scipy = "*"
+pandas = "*"
+xarray = "*"
 
 [dev-packages]
 

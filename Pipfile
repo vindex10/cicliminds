@@ -11,6 +11,7 @@ numpy = "*"
 scipy = "*"
 pandas = "*"
 xarray = "*"
+geopandas = "*"
 
 [dev-packages]
 

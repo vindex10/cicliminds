@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 jupyterlab = "*"
-cicliminds-lib = {editable = true, git = "https://github.com/vindex10/cicliminds-lib.git"}
+cicliminds-lib = {ref = "0.1.0", git = "https://github.com/vindex10/cicliminds-lib.git"}
 matplotlib = "*"
 numpy = "*"
 scipy = "*"

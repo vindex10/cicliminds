@@ -5,13 +5,14 @@ name = "pypi"
 
 [packages]
 jupyterlab = "*"
-cicliminds-lib = {ref = "0.1.0", git = "https://github.com/vindex10/cicliminds-lib.git"}
+cicliminds-lib = {ref = "800f36177e4e03df16dcaa5e1c559ba050124577", git = "https://github.com/vindex10/cicliminds-lib.git"}
 matplotlib = "*"
 numpy = "*"
 scipy = "*"
 pandas = "*"
 xarray = "*"
 geopandas = "*"
+ipywidgets = "*"
 
 [dev-packages]
 

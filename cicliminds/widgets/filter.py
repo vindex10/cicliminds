@@ -35,6 +35,11 @@ class FilterWidget(ObserverWidget):
             widget.options = partial_dataset[field].unique()
             widget.notify_change({"type": "change", "name": "options", "new": widget.options})
 
+    def reset_filters(self):
+        for widget in self.filter_widgets.values():
+            widget.values = tuple()
+            widget.notify_change({"type": "change", "name": "value", "new": tuple()})
+
     def _get_filter_widget_panel(self):
         filters = []
         for field, widget in self.filter_widgets.items():
@@ -48,9 +53,7 @@ class FilterWidget(ObserverWidget):
         return button_reset
 
     def _reset_filters(self, change):  # pylint: disable=unused-argument
-        for widget in self.filter_widgets.values():
-            widget.values = tuple()
-            widget.notify_change({"type": "change", "name": "value", "new": tuple()})
+        self.reset_filters()
 
     def _get_filter_widgets(self):
         filter_widgets = {}

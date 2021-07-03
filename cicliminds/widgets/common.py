@@ -5,6 +5,12 @@ class ObserverWidget:
     def observe(self, func):
         self._observers.append(func)
 
-    def trigger(self, change):
+    def propagate(self, obj, change):
+        self.trigger(change, parent=obj)
+
+    def trigger(self, change, parent=None):
+        obj = [self]
+        if parent is not None:
+            obj += parent
         for observer in self._observers:
-            observer(self, change)
+            observer(obj, change)

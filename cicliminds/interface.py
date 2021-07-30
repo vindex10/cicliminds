@@ -9,8 +9,6 @@ def expand_state_into_queries(models, agg_params):
         "sliding_window_size": agg_params["sliding_window_size"],
         "slide_step": agg_params["slide_step"],
         "subtract_reference": agg_params["subtract_reference"],
-        "binsize": None,
-        "bincount": 10,
     }]
     res = expand_plot_types(res, agg_params["plot_types"])
 

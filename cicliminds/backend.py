@@ -45,7 +45,7 @@ def plot_by_query(ax, dataset, query):
         raw_data = xr.load_dataset(tmpfile.name)
     masked_data = _mask_regions(raw_data, query["regions"])
     plot_func = PLOT_FUNCS[query["plot_type"]][int(query["subtract_reference"])]
-    plot_func(ax, masked_data[query["variable"]])
+    plot_func(ax, masked_data[query["variable"]], query)
 
 
 def _mask_regions(data, regions):

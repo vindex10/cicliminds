@@ -30,6 +30,13 @@ class StagedWidget(ObserverWidget):
             self._block_widgets.insert(0, new_block)
         self.state["staged_list"].children = tuple(rendered_blocks) + self.state["staged_list"].children
 
+    def get_state(self):
+        res = []
+        for block in self._block_widgets:
+            block_state = block.get_query()
+            res.append(block_state)
+        return res
+
     def _get_rebuild_all_button(self):
         button_rebuild_all = Button(description="Rebuild all", icon="redo", button_style="success")
         button_rebuild_all.on_click(self._rebuild_all_action)

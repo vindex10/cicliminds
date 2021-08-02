@@ -1,5 +1,5 @@
 import json
-from ipywidgets import HBox, VBox, Button, Textarea
+from ipywidgets import HBox, VBox, Button, Textarea, Label
 from cicliminds.widgets.common import ObserverWidget
 
 
@@ -15,6 +15,7 @@ class StateMgmtWidget(ObserverWidget):
 
     def render(self):
         block = VBox([
+            Label("Save and restore blocks:"),
             HBox([self.state["state_widget"], VBox([self.state["dump_state_button"], self.state["stage_state_button"]],
                  layout={"flex": "1 1 100px", "margin": "0 20px 0 0"})])
         ], layout={"margin": "5px 0"})

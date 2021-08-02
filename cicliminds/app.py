@@ -13,6 +13,7 @@ from cicliminds.widgets.state_mgmt import StateMgmtWidget
 from cicliminds.interface import expand_state_into_queries
 from cicliminds.backend import write_dataset_by_query
 from cicliminds.backend import plot_by_query
+from cicliminds.backend import add_plot_descriptions
 
 
 class App:  # pylint: disable=too-few-public-methods
@@ -78,7 +79,9 @@ class App:  # pylint: disable=too-few-public-methods
         fig, ax = plt.subplots()
         with tempfile.NamedTemporaryFile("r") as dataset:
             write_dataset_by_query(self.datasets, cfg, dataset.name)
-            plot_by_query(ax, dataset.name, cfg)
+            meta = plot_by_query(ax, dataset.name, cfg)
+        ax.set_position((0, 0.15, 1, 0.85))
+        add_plot_descriptions(fig, ax, cfg, meta)
         plt.close()
         with block_widget.capture_output():
             clear_output()

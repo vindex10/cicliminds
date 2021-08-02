@@ -45,7 +45,17 @@ def plot_by_query(ax, dataset, query):
         raw_data = xr.load_dataset(tmpfile.name)
     masked_data = _mask_regions(raw_data, query["regions"])
     plot_func = PLOT_FUNCS[query["plot_type"]][int(query["subtract_reference"])]
-    plot_func(ax, masked_data[query["variable"]], query)
+    variable_data = masked_data[query["variable"]]
+    plot_func(ax, variable_data, query)
+    return {"description": variable_data.long_name}
+
+
+def add_plot_descriptions(fig, ax, cfg, meta):
+    reference_tag = "" if not cfg["subtract_reference"] else " - ref"
+    type_tag = f"{cfg['plot_type']}{reference_tag}"
+    title = f"{cfg['variable']} [{type_tag}]"
+    ax.set_title(title)
+    fig.text(0, 0, f"Index description: {meta['description']}", wrap=True)
 
 
 def _mask_regions(data, regions):

@@ -23,6 +23,8 @@ class StateMgmtWidget(ObserverWidget):
 
     def get_state(self):
         str_state = self.state["state_widget"].value
+        if not str_state:
+            return []
         return json.loads(str_state)
 
     def set_state(self, new_state):

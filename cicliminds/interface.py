@@ -1,9 +1,20 @@
 from collections import defaultdict
 from copy import deepcopy
 from itertools import chain
+from itertools import product
 
 
 def expand_state_into_queries(models, agg_params):
+    input_queries = expand_input_queries(models, agg_params)
+    plot_queries = expand_plot_queries(agg_params)
+    for input_query, plot_query in product(input_queries, plot_queries):
+        yield {
+            "input_query": deepcopy(input_query),
+            "plot_query": deepcopy(plot_query)
+        }
+
+
+def expand_plot_queries(agg_params):
     res = [{
         "reference_window_size": agg_params["reference_window_size"],
         "sliding_window_size": agg_params["sliding_window_size"],
@@ -12,14 +23,17 @@ def expand_state_into_queries(models, agg_params):
         "normalize_histograms": agg_params["normalize_histograms"],
     }]
     res = expand_plot_types(res, agg_params["plot_types"])
+    yield from res
 
+
+def expand_input_queries(models, agg_params):
+    res = [{}]
     selected_regions = agg_params["select_regions"] or []
     aggregate_regions = agg_params["aggregate_regions"]
     if aggregate_regions or not selected_regions:
         res = expand_regions_agg(res, selected_regions)
     else:
         res = expand_regions_noagg(res, selected_regions)
-
     indexed_res = expand_models_indexed(res, models)
     if agg_params["aggregate_years"]:
         yield from agg_indexed_models_by_years(indexed_res)

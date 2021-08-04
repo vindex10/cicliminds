@@ -1,10 +1,6 @@
 from ipywidgets import Label, VBox, HBox, Button, SelectMultiple, Checkbox, IntText
 
-from cicliminds_lib.plotting.configs import DEFAULT_REFERENCE_WINDOW_SIZE
-from cicliminds_lib.plotting.configs import DEFAULT_SLIDING_WINDOW_SIZE
-from cicliminds_lib.plotting.configs import DEFAULT_SLIDE_STEP
-from cicliminds_lib.plotting.configs import DEFAULT_NORMALIZE_HISTOGRAMS
-
+from cicliminds_lib.plotting.config import DEFAULT_RECIPE_CONFIG
 from cicliminds_lib.masks.loaders import load_reference_regions_meta
 from cicliminds.widgets.common import ObserverWidget
 from cicliminds.backend import PLOT_FUNCS
@@ -12,10 +8,10 @@ from cicliminds.backend import PLOT_FUNCS
 
 class StagingWidget(ObserverWidget):
     DEFAULTS = {"plot_type": list(PLOT_FUNCS.keys())[1],
-                "reference_window_size": DEFAULT_REFERENCE_WINDOW_SIZE,
-                "sliding_window_size": DEFAULT_SLIDING_WINDOW_SIZE,
-                "slide_step": DEFAULT_SLIDE_STEP,
-                "normalize_histograms": DEFAULT_NORMALIZE_HISTOGRAMS}
+                "reference_window_size": DEFAULT_RECIPE_CONFIG["reference_window_size"],
+                "sliding_window_size": DEFAULT_RECIPE_CONFIG["sliding_window_size"],
+                "slide_step": DEFAULT_RECIPE_CONFIG["slide_step"],
+                "normalize_histograms": DEFAULT_RECIPE_CONFIG["normalize_histograms"]}
 
     def __init__(self):
         self.state = {}

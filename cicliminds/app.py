@@ -1,4 +1,3 @@
-import tempfile
 import matplotlib.pyplot as plt
 from IPython.display import clear_output, display
 from ipywidgets import VBox
@@ -11,9 +10,7 @@ from cicliminds.widgets.block import BlockWidget
 from cicliminds.widgets.state_mgmt import StateMgmtWidget
 
 from cicliminds.interface import expand_state_into_queries
-from cicliminds.backend import write_dataset_by_query
-from cicliminds.backend import plot_by_query
-from cicliminds.backend import add_plot_descriptions
+from cicliminds.backend import process_block_query
 
 
 class App:  # pylint: disable=too-few-public-methods
@@ -75,14 +72,9 @@ class App:  # pylint: disable=too-few-public-methods
         block_widget = self._is_rebuild_one_action(objs, change)
         if block_widget is None:
             return
-        cfg = block_widget.get_query()
+        query = block_widget.get_query()
         fig, ax = plt.subplots()
-        with tempfile.NamedTemporaryFile("r") as dataset:
-            write_dataset_by_query(self.datasets, cfg, dataset.name)
-            meta = plot_by_query(ax, dataset.name, cfg)
-        ax.set_position((0, 0.15, 1, 0.85))
-        add_plot_descriptions(fig, ax, cfg, meta)
-        plt.close()
+        process_block_query(fig, ax, self.datasets, query)
         with block_widget.capture_output():
             clear_output()
             display(fig)

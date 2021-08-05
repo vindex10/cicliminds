@@ -9,7 +9,7 @@ from cicliminds.widgets.staged import StagedWidget
 from cicliminds.widgets.block import BlockWidget
 from cicliminds.widgets.state_mgmt import StateMgmtWidget
 
-from cicliminds.interface import expand_state_into_queries
+from cicliminds.interface.query_builder import expand_state_into_queries
 from cicliminds.backend import process_block_query
 
 

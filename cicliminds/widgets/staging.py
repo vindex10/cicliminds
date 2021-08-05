@@ -3,11 +3,11 @@ from ipywidgets import Label, VBox, HBox, Button, SelectMultiple, Checkbox, IntT
 from cicliminds_lib.plotting.config import DEFAULT_RECIPE_CONFIG
 from cicliminds_lib.masks.loaders import load_reference_regions_meta
 from cicliminds.widgets.common import ObserverWidget
-from cicliminds.backend import PLOT_FUNCS
+from cicliminds.interface.plot_types import PLOT_TYPES_SPEC
 
 
 class StagingWidget(ObserverWidget):
-    DEFAULTS = {"plot_type": list(PLOT_FUNCS.keys())[1],
+    DEFAULTS = {"plot_type": list(PLOT_TYPES_SPEC)[1],
                 "reference_window_size": DEFAULT_RECIPE_CONFIG["reference_window_size"],
                 "sliding_window_size": DEFAULT_RECIPE_CONFIG["sliding_window_size"],
                 "slide_step": DEFAULT_RECIPE_CONFIG["slide_step"],
@@ -20,7 +20,7 @@ class StagingWidget(ObserverWidget):
                                                  indent=False, layout={"width": "auto"})
         self.state["aggregate_regions"] = Checkbox(description="regions",
                                                    indent=False, layout={"width": "auto"})
-        self.state["plot_types"] = SelectMultiple(options=list(PLOT_FUNCS.keys()), value=(self.DEFAULTS["plot_type"],),
+        self.state["plot_types"] = SelectMultiple(options=list(PLOT_TYPES_SPEC), value=(self.DEFAULTS["plot_type"],),
                                                   rows=6, layout={"width": "auto"})
         self.state["subtract_reference"] = Checkbox(description="Subtract reference",
                                                     indent=False, layout={"width": "auto"})

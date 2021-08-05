@@ -10,27 +10,18 @@ from cicliminds_lib.masks.masks import get_land_mask
 from cicliminds_lib.masks.masks import get_antarctica_mask
 from cicliminds_lib.masks.masks import iter_reference_region_masks
 
-from cicliminds_lib.plotting.recipes.means_of_hists import plot_means_of_hists
-from cicliminds_lib.plotting.recipes.means_of_hists import plot_means_of_hists_diff
-from cicliminds_lib.plotting.recipes.hists_of_means import plot_hists_of_means
-from cicliminds_lib.plotting.recipes.hists_of_means import plot_hists_of_means_diff
-from cicliminds_lib.plotting.recipes.timeavgs import plot_hist_of_timeavgs
-from cicliminds_lib.plotting.recipes.timeavgs import plot_hist_of_timeavgs_diff
-
-
-PLOT_FUNCS = {
-    "fldmean first": [plot_hists_of_means, plot_hists_of_means_diff],
-    "fldmean last": [plot_means_of_hists, plot_means_of_hists_diff],
-    "avg time": [plot_hist_of_timeavgs, plot_hist_of_timeavgs_diff]
-}
+from cicliminds.interface.plot_types import get_plot_recipe_by_query
+from cicliminds.interface.plot_query_adapter import PlotQueryAdapter
 
 
 def process_block_query(fig, ax, datasets, query):
+    input_query, plot_query = query["input_query"], query["plot_query"]
     with tempfile.NamedTemporaryFile("r") as dataset:
-        write_dataset_by_query(datasets, query["input_query"], dataset.name)
+        write_dataset_by_query(datasets, input_query, dataset.name)
         meta, variable_data = mask_dataset_by_query(dataset.name, query["input_query"])
-    plot_query = parse_plot_query(query["input_query"], query["plot_query"])
-    plot_by_query(ax, variable_data, plot_query)
+    plot_config_patch = parse_plot_query(input_query, plot_query)
+    plot_recipe = get_plot_recipe_by_query(plot_query)
+    plot_recipe.plot(ax, variable_data, plot_config_patch)
     ax.set_position((0, 0.15, 1, 0.85))
     add_plot_descriptions(fig, ax, variable_data, plot_query, meta)
     plt.close()
@@ -75,12 +66,7 @@ def _mask_regions(data, regions):
 
 def parse_plot_query(input_query, plot_query):
     plot_query["init_year"] = min(int(year) for timespan in input_query["timespan"] for year in timespan.split("-"))
-    return plot_query
-
-
-def plot_by_query(ax, variable_data, plot_query):
-    plot_func = PLOT_FUNCS[plot_query["plot_type"]][int(plot_query["subtract_reference"])]
-    plot_func(ax, variable_data, plot_query)
+    return PlotQueryAdapter.from_json(plot_query)
 
 
 def add_plot_descriptions(fig, ax, variable_data, plot_query, meta):

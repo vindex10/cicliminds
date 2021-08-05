@@ -1,17 +1,30 @@
 from collections import defaultdict
 from copy import deepcopy
+from dataclasses import asdict
 from itertools import chain
 from itertools import product
+
+from cicliminds.interface.plot_query_adapter import PlotQueryAdapter
+from cicliminds.interface.plot_types import get_plot_recipe_by_query
 
 
 def expand_state_into_queries(models, agg_params):
     input_queries = expand_input_queries(models, agg_params)
     plot_queries = expand_plot_queries(agg_params)
     for input_query, plot_query in product(input_queries, plot_queries):
+        plot_query = append_plot_query_defaults(input_query, plot_query)
         yield {
             "input_query": deepcopy(input_query),
-            "plot_query": deepcopy(plot_query)
+            "plot_query": plot_query
         }
+
+
+def append_plot_query_defaults(input_query, plot_query):
+    plot_recipe = get_plot_recipe_by_query(plot_query)
+    plot_config_defaults = asdict(plot_recipe.get_default_config(input_query["variable"]))
+    plot_config_defaults.update(plot_query)
+    plot_query_defaults = PlotQueryAdapter.to_json(deepcopy(plot_config_defaults), restrictive=False)
+    return plot_query_defaults
 
 
 def expand_plot_queries(agg_params):
@@ -20,7 +33,7 @@ def expand_plot_queries(agg_params):
         "sliding_window_size": agg_params["sliding_window_size"],
         "slide_step": agg_params["slide_step"],
         "subtract_reference": agg_params["subtract_reference"],
-        "normalize_histograms": agg_params["normalize_histograms"],
+        "normalize_histograms": agg_params["normalize_histograms"]
     }]
     res = expand_plot_types(res, agg_params["plot_types"])
     yield from res

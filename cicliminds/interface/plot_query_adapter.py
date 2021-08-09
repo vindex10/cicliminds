@@ -15,7 +15,8 @@ class UnitFactorConverter:
     @classmethod
     def to_json(cls, value):
         for k, v in cls.KEYWORDS.items():
-            if v == value:
+            # compare for precise match. 1 should not match np.timdelta64(1, 'D')
+            if type(v) == type(value) and v == value:  # pylint: disable=unidiomatic-typecheck
                 return k
         return value
 

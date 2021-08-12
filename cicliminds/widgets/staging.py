@@ -1,7 +1,7 @@
 from ipywidgets import Label, VBox, HBox, Button, SelectMultiple, Checkbox, IntText
 
 from cicliminds_lib.plotting.config import DEFAULT_RECIPE_CONFIG
-from cicliminds_lib.masks.loaders import load_reference_regions_meta
+from cicliminds_lib.masks import REFERENCE_REGIONS
 from cicliminds.widgets.common import ObserverWidget
 from cicliminds.interface.plot_types import PLOT_TYPES_SPEC
 
@@ -63,7 +63,7 @@ class StagingWidget(ObserverWidget):
 
     @staticmethod
     def _get_select_regions():
-        region_names = [f'{r["LAB"]} :: {r["NAME"]}' for _, r in load_reference_regions_meta().iterrows()]
+        region_names = [f'{r.abbrev} :: {r.name}' for r in REFERENCE_REGIONS]
         select = SelectMultiple(options=region_names, value=region_names[:1], rows=10, layout={"width": "auto"})
         return select
 

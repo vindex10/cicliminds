@@ -6,9 +6,9 @@ import xarray as xr
 from cicliminds_lib.bindings import cdo_cat
 from cicliminds_lib.bindings import remove_grid
 
-from cicliminds_lib.masks.masks import get_land_mask
-from cicliminds_lib.masks.masks import get_antarctica_mask
-from cicliminds_lib.masks.masks import iter_reference_region_masks
+from cicliminds_lib.masks import get_land_mask
+from cicliminds_lib.masks import get_antarctica_mask
+from cicliminds_lib.masks import iter_reference_region_masks
 
 from cicliminds.interface.plot_types import get_plot_recipe_by_query
 from cicliminds.interface.plot_query_adapter import PlotQueryAdapter

@@ -4,6 +4,8 @@ from dataclasses import asdict
 from itertools import chain
 from itertools import product
 
+from cicliminds.widgets.filter import FilterWidget
+
 from cicliminds.interface.plot_query_adapter import PlotQueryAdapter
 from cicliminds.interface.plot_types import get_plot_recipe_by_query
 
@@ -39,21 +41,6 @@ def expand_plot_queries(agg_params):
     yield from res
 
 
-def expand_input_queries(models, agg_params):
-    res = [{}]
-    selected_regions = agg_params["select_regions"] or []
-    aggregate_regions = agg_params["aggregate_regions"]
-    if aggregate_regions or not selected_regions:
-        res = expand_regions_agg(res, selected_regions)
-    else:
-        res = expand_regions_noagg(res, selected_regions)
-    indexed_res = expand_models_indexed(res, models)
-    if agg_params["aggregate_years"]:
-        yield from agg_indexed_models_by_years(indexed_res)
-    else:
-        yield from chain.from_iterable(indexed_res.values())
-
-
 def expand_plot_types(queries, plot_types):
     res = []
     for block in queries:
@@ -63,6 +50,25 @@ def expand_plot_types(queries, plot_types):
                 "plot_type": plot_type,
             })
             res.append(new_block)
+    return res
+
+
+def expand_input_queries(models, agg_params):
+    res = [{}]
+    res = expand_regions(res, agg_params)
+    res = expand_models(res, models)
+    res = agg_model_years(res, agg_params)
+    res = agg_model_types(res, agg_params)
+    yield from res
+
+
+def expand_regions(res, agg_params):
+    selected_regions = agg_params["select_regions"] or []
+    aggregate_regions = agg_params["aggregate_regions"]
+    if aggregate_regions or not selected_regions:
+        res = expand_regions_agg(res, selected_regions)
+    else:
+        res = expand_regions_noagg(res, selected_regions)
     return res
 
 
@@ -89,20 +95,35 @@ def expand_regions_noagg(queries, regions):
     return res
 
 
-def expand_models_indexed(queries, models):
-    ts_index = defaultdict(list)
+def expand_models(queries, models):
     for block in queries:
         for _, model in models.iterrows():
             new_block = deepcopy(block)
             new_block.update(model.to_dict())
-            key = ":".join(model.drop(["scenario", "timespan"]).values)
             new_block["scenario"] = [new_block["scenario"]]
             new_block["timespan"] = [new_block["timespan"]]
-            if new_block["scenario"][0] == "historical":
-                ts_index[key].insert(0, new_block)
-            else:
-                ts_index[key].append(new_block)
-    return ts_index
+            new_block["model"] = [new_block["model"]]
+            yield new_block
+
+
+def agg_model_years(res, agg_params):
+    indexed_res = build_models_index(res, ["scenario", "timespan"])
+    put_historical_first(indexed_res)
+    if agg_params["aggregate_years"]:
+        yield from agg_indexed_models_by_years(indexed_res)
+    else:
+        yield from chain.from_iterable(indexed_res.values())
+
+
+def put_historical_first(indexed_res):
+    for row in indexed_res.values():
+        for i, model in enumerate(row):
+            if model["scenario"][0] == "historical":
+                break
+        else:
+            continue
+        del row[i]  # pylint: disable=undefined-loop-variable
+        row.insert(0, model)  # pylint: disable=undefined-loop-variable
 
 
 def agg_indexed_models_by_years(indexed_queries):
@@ -120,3 +141,38 @@ def agg_years(query_group):
         new_block["scenario"] += block["scenario"]
         new_block["timespan"] += block["timespan"]
         yield new_block
+
+
+def agg_model_types(queries, agg_params):
+    if not agg_params["aggregate_models"]:
+        yield from queries
+        return
+
+    model_index = build_models_index(queries, ignore_fields=["model"])
+    for blocks in model_index.values():
+        models = [block["model"][0] for block in blocks]
+        new_block = deepcopy(blocks[0])
+        new_block["model"] = models
+        yield new_block
+
+
+def build_models_index(queries, ignore_fields=None):
+    ts_index = defaultdict(list)
+    for block in queries:
+        new_block = deepcopy(block)
+        key = dataset_key_from_block(new_block, ignore_fields)
+        ts_index[key].append(new_block)
+    return ts_index
+
+
+def dataset_key_from_block(block, ignore_fields=None):
+    if ignore_fields is None:
+        ignore_fields = []
+    parts = [_join_list(block[f]) for f in FilterWidget.FILTER_FIELDS if f not in ignore_fields]
+    return ";".join(parts)
+
+
+def _join_list(obj):
+    if isinstance(obj, list):
+        return ":".join(obj)
+    return obj

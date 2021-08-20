@@ -20,6 +20,8 @@ class StagingWidget(ObserverWidget):
                                                  indent=False, layout={"width": "auto"})
         self.state["aggregate_regions"] = Checkbox(description="regions",
                                                    indent=False, layout={"width": "auto"})
+        self.state["aggregate_models"] = Checkbox(description="models",
+                                                  indent=False, layout={"width": "auto"})
         self.state["plot_types"] = SelectMultiple(options=list(PLOT_TYPES_SPEC), value=(self.DEFAULTS["plot_type"],),
                                                   rows=6, layout={"width": "auto"})
         self.state["subtract_reference"] = Checkbox(description="Subtract reference",
@@ -41,7 +43,8 @@ class StagingWidget(ObserverWidget):
         staging_panel = HBox([
             VBox([Label("Regions"), self.state["select_regions"]],
                  layout=block_layout),
-            VBox([Label("Aggregate"), self.state["aggregate_years"], self.state["aggregate_regions"]],
+            VBox([Label("Aggregate"),
+                  self.state["aggregate_years"], self.state["aggregate_regions"], self.state["aggregate_models"]],
                  layout=block_layout),
             VBox([Label("Plot type"), self.state["plot_types"],
                   self.state["subtract_reference"], self.state["normalize_histograms"]],

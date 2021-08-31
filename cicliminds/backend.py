@@ -4,10 +4,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
+import cftime
 
 from cicliminds_lib.masks import get_land_mask
 from cicliminds_lib.masks import get_antarctica_mask
 from cicliminds_lib.masks import iter_reference_region_masks
+from cicliminds_lib.bindings import cdo_remapcon_from_data
 from cicliminds_lib.plotting._helpers import _get_variable_name
 
 from cicliminds.interface.plot_types import get_plot_recipe_by_query
@@ -28,7 +30,7 @@ def process_block_query(fig, ax, datasets, query):
 
 def get_dataset_by_query(datasets_reg, query):
     common_mask = (datasets_reg["model"].isin(query["model"])) \
-               & (datasets_reg["init_params"] == query["init_params"]) \
+               & (datasets_reg["init_params"].isin(query["init_params"])) \
                & (datasets_reg["frequency"] == query["frequency"]) \
                & (datasets_reg["variable"] == query["variable"]) \
                & (datasets_reg["scenario"].isin(query["scenario"])) \
@@ -55,10 +57,25 @@ def sort_reg(datasets_reg, query):
     return new_reg
 
 
+def safe_drop_bounds(dataset, fields):
+    to_drop = []
+    for field in fields:
+        try:
+            bound_name = getattr(dataset, field).bounds
+            to_drop.append(bound_name)
+        except AttributeError:
+            pass
+    return dataset.drop_vars(to_drop)
+
+
 def read_datasets(datasets_reg):
     for fname, params in datasets_reg.iterrows():
         list_params = [params[f] for f in ["variable", "model", "init_params", "frequency", "scenario"]]
-        yield (list_params, xr.load_dataset(fname))
+        dataset = xr.load_dataset(fname)
+        if not isinstance(dataset.time.values[0], np.datetime64):
+            dataset["time"] = cftime.date2num(dataset.time.values, "seconds since 1970-01-01").astype("datetime64[s]")
+        dataset = safe_drop_bounds(dataset, ["time", "lon", "lat"])
+        yield (list_params, dataset)
 
 
 def merge_scenarios(datasets):
@@ -70,14 +87,51 @@ def merge_scenarios(datasets):
         scenario_group = [first_elem]
         for sc in scenario_group_iter:
             scenario_group.append(sc[1])
-        yield (params[:-1], xr.concat(scenario_group, dim="time", data_vars="all"))
+        merged = xr.concat(scenario_group, dim="time", data_vars="all")
+        yield (params[:-1], merged)
+
+
+def get_coarsest_grid(model_group):
+    lon_dims = []
+    lat_dims = []
+    time_dims = []
+    for model in model_group:
+        lat_dims.append(model.lat.shape[0])
+        lon_dims.append(model.lon.shape[0])
+        time_dims.append(model.time.shape[0])
+    return min(time_dims), min(lon_dims), min(lat_dims)
+
+
+def unify_models_times(model_group, timeslice):
+    res = []
+    first_time = model_group[0].isel(time=timeslice).time
+    for model in model_group:
+        new = model.isel(time=timeslice).copy()
+        new["time"] = first_time
+        res.append(new)
+    return res
+
+
+def regrid_model_group(model_group, lon, lat):
+    res = []
+    for model in model_group:
+        regrided_model = cdo_remapcon_from_data(model, lon, lat)
+        res.append(regrided_model)
+    return res
 
 
 def merge_models(datasets):
-    for _, model_group_iter in groupby(datasets, key=lambda row: row[0][:1] + row[0][2:]):
+    for _, model_group_iter in groupby(datasets, key=lambda row: row[0][:1] + row[0][3:]):
         param_group, model_group = zip(*model_group_iter)
-        model_names = pd.Series([p[1] for p in param_group], name="model")
-        yield (param_group[0][:1] + param_group[0][2:], xr.concat(model_group, dim=model_names))
+        model_names = pd.Series([f"{p[1]}_{p[2]}" for p in param_group], name="model")
+        if len(model_group) > 1:
+            timerange, lon, lat = get_coarsest_grid(model_group)
+            common_time_models = unify_models_times(model_group, slice(0, timerange))
+            common_grid_models = regrid_model_group(common_time_models, lon, lat)
+            merged = xr.concat(common_grid_models, dim=model_names)
+        else:
+            merged = model_group[0]
+        yield (param_group[0][:1] + param_group[0][3:], merged)
 
 
 def mask_dataset_by_query(dataset, input_query):
@@ -92,8 +146,10 @@ def _mask_regions(data, regions):
         mask = mask & (~get_antarctica_mask(data))
         return data.where(mask)
 
-    all_reg_mask = np.any([reg_mask for _, reg_mask in iter_reference_region_masks(data, regions)])
-    mask = mask & all_reg_mask
+    all_reg_masks = [reg_mask for _, reg_mask in iter_reference_region_masks(data, regions)]
+    reg_dim = pd.Series(regions, name="regions")
+    merged_reg_mask = xr.concat(all_reg_masks, dim=reg_dim).any(dim="regions")
+    mask = mask & merged_reg_mask
     return data.where(mask)
 
 

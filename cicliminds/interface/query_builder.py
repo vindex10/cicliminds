@@ -100,6 +100,7 @@ def expand_models(queries, models):
         for _, model in models.iterrows():
             new_block = deepcopy(block)
             new_block.update(model.to_dict())
+            new_block["init_params"] = [new_block["init_params"]]
             new_block["scenario"] = [new_block["scenario"]]
             new_block["timespan"] = [new_block["timespan"]]
             new_block["model"] = [new_block["model"]]
@@ -148,11 +149,13 @@ def agg_model_types(queries, agg_params):
         yield from queries
         return
 
-    model_index = build_models_index(queries, ignore_fields=["model"])
+    model_index = build_models_index(queries, ignore_fields=["model", "init_params"])
     for blocks in model_index.values():
-        models = [block["model"][0] for block in blocks]
+        models = {block["model"][0] for block in blocks}
+        init_params = {block["init_params"][0] for block in blocks}
         new_block = deepcopy(blocks[0])
-        new_block["model"] = models
+        new_block["model"] = list(models)
+        new_block["init_params"] = list(init_params)
         yield new_block
 
 

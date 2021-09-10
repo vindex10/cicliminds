@@ -18,10 +18,14 @@ class StagingWidget(ObserverWidget):
         self.state["select_regions"] = self._get_select_regions()
         self.state["aggregate_years"] = Checkbox(description="years", value=True,
                                                  indent=False, layout={"width": "auto"})
-        self.state["aggregate_regions"] = Checkbox(description="regions",
+        self.state["aggregate_regions"] = Checkbox(description="regions", value=True,
                                                    indent=False, layout={"width": "auto"})
-        self.state["aggregate_models"] = Checkbox(description="models",
+        self.state["aggregate_models"] = Checkbox(description="models", value=True,
                                                   indent=False, layout={"width": "auto"})
+        self.state["aggregate_model_ensembles"] = Checkbox(description="model ensembles", value=True,
+                                                           indent=False, layout={"width": "auto"})
+        self.state["prefer_model_groups"] = Checkbox(description="prefer model groups",
+                                                     indent=False, layout={"width": "auto"})
         self.state["plot_types"] = SelectMultiple(options=list(PLOT_TYPES_SPEC), value=(self.DEFAULTS["plot_type"],),
                                                   rows=6, layout={"width": "auto"})
         self.state["subtract_reference"] = Checkbox(description="Subtract reference",
@@ -44,7 +48,9 @@ class StagingWidget(ObserverWidget):
             VBox([Label("Regions"), self.state["select_regions"]],
                  layout=block_layout),
             VBox([Label("Aggregate"),
-                  self.state["aggregate_years"], self.state["aggregate_regions"], self.state["aggregate_models"]],
+                  self.state["aggregate_years"], self.state["aggregate_regions"],
+                  self.state["aggregate_models"], self.state["aggregate_model_ensembles"],
+                  self.state["prefer_model_groups"]],
                  layout=block_layout),
             VBox([Label("Plot type"), self.state["plot_types"],
                   self.state["subtract_reference"], self.state["normalize_histograms"]],

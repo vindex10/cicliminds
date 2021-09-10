@@ -1,3 +1,4 @@
+from itertools import chain
 from itertools import groupby
 
 import matplotlib.pyplot as plt
@@ -19,8 +20,8 @@ from cicliminds.interface.plot_query_adapter import PlotQueryAdapter
 def process_block_query(fig, ax, datasets, query):
     input_query, plot_query = query["input_query"], query["plot_query"]
     dataset = get_dataset_by_query(datasets, input_query)
-    masked_dataset = mask_dataset_by_query(dataset, query["input_query"])
-    plot_config_patch = parse_plot_query(input_query, plot_query)
+    masked_dataset = mask_dataset_by_query(dataset, input_query[0])
+    plot_config_patch = parse_plot_query(input_query[0], plot_query)
     plot_recipe = get_plot_recipe_by_query(plot_query)
     plot_recipe.plot(ax, masked_dataset, plot_config_patch)
     ax.set_position((0, 0.15, 1, 0.85))
@@ -29,19 +30,20 @@ def process_block_query(fig, ax, datasets, query):
 
 
 def get_dataset_by_query(datasets_reg, query):
-    common_mask = (datasets_reg["model"].isin(query["model"])) \
-               & (datasets_reg["init_params"].isin(query["init_params"])) \
-               & (datasets_reg["frequency"] == query["frequency"]) \
-               & (datasets_reg["variable"] == query["variable"]) \
-               & (datasets_reg["scenario"].isin(query["scenario"])) \
-               & (datasets_reg["timespan"].isin(query["timespan"]))
-    filtered_reg = sort_reg(datasets_reg[common_mask], query)
-    datasets = read_datasets(filtered_reg)
-    datasets = merge_scenarios(datasets)
-    datasets = list(merge_models(datasets))
-    if len(datasets) > 1:
-        raise Exception("Full merge failed for datasets")
-    return datasets[0][1]
+    datasets = []
+    for model_ensemble_query in query:
+        common_mask = (datasets_reg["model"].isin(model_ensemble_query["model"])) \
+                    & (datasets_reg["init_params"].isin(model_ensemble_query["init_params"])) \
+                    & (datasets_reg["frequency"] == model_ensemble_query["frequency"]) \
+                    & (datasets_reg["variable"] == model_ensemble_query["variable"]) \
+                    & (datasets_reg["scenario"].isin(model_ensemble_query["scenario"])) \
+                    & (datasets_reg["timespan"].isin(model_ensemble_query["timespan"]))
+        filtered_reg = sort_reg(datasets_reg[common_mask], model_ensemble_query)
+        ensemble_datasets = read_datasets(filtered_reg)
+        ensemble_datasets = list(merge_scenarios(ensemble_datasets))
+        datasets.append(ensemble_datasets)
+    merged = list(merge_models(chain.from_iterable(datasets)))
+    return merged[0][1]
 
 
 def sort_reg(datasets_reg, query):
@@ -123,14 +125,15 @@ def regrid_model_group(model_group, lon, lat):
 def merge_models(datasets):
     for _, model_group_iter in groupby(datasets, key=lambda row: row[0][:1] + row[0][3:]):
         param_group, model_group = zip(*model_group_iter)
-        model_names = pd.Series([f"{p[1]}_{p[2]}" for p in param_group], name="model")
+        model_names = [f"{p[1]}_{p[2]}" for p in param_group]
+        model_names_axis = pd.Series(model_names, name="model")
         if len(model_group) > 1:
             timerange, lon, lat = get_coarsest_grid(model_group)
             common_time_models = unify_models_times(model_group, slice(0, timerange))
             common_grid_models = regrid_model_group(common_time_models, lon, lat)
-            merged = xr.concat(common_grid_models, dim=model_names)
+            merged = xr.concat(common_grid_models, dim=model_names_axis)
         else:
-            merged = model_group[0]
+            merged = model_group[0].expand_dims({"model": model_names})
         yield (param_group[0][:1] + param_group[0][3:], merged)
 
 

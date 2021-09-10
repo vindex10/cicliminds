@@ -23,7 +23,7 @@ def expand_state_into_queries(models, agg_params):
 
 def append_plot_query_defaults(input_query, plot_query):
     plot_recipe = get_plot_recipe_by_query(plot_query)
-    plot_config_defaults = asdict(plot_recipe.get_default_config(input_query["variable"]))
+    plot_config_defaults = asdict(plot_recipe.get_default_config(input_query[0]["variable"]))
     plot_config_defaults.update(plot_query)
     plot_query_defaults = PlotQueryAdapter.to_json(deepcopy(plot_config_defaults), restrictive=False)
     return plot_query_defaults
@@ -58,7 +58,13 @@ def expand_input_queries(models, agg_params):
     res = expand_regions(res, agg_params)
     res = expand_models(res, models)
     res = agg_model_years(res, agg_params)
-    res = agg_model_types(res, agg_params)
+    if agg_params["prefer_model_groups"]:
+        res = agg_model_types(res, agg_params)
+        res = agg_ensemble_members(res)
+    else:
+        res = agg_ensemble_members(res)
+        res = agg_model_types(res, agg_params)
+    res = agg_model_ensembles(res, agg_params)
     yield from res
 
 
@@ -149,14 +155,31 @@ def agg_model_types(queries, agg_params):
         yield from queries
         return
 
-    model_index = build_models_index(queries, ignore_fields=["model", "init_params"])
+    model_index = build_models_index(queries, ignore_fields=["model", "timespan"])
     for blocks in model_index.values():
         models = {block["model"][0] for block in blocks}
+        new_block = deepcopy(blocks[0])
+        new_block["model"] = sorted(list(models))
+        yield new_block
+
+
+def agg_ensemble_members(queries):
+    model_index = build_models_index(queries, ignore_fields=["init_params", "timespan"])
+    for blocks in model_index.values():
         init_params = {block["init_params"][0] for block in blocks}
         new_block = deepcopy(blocks[0])
-        new_block["model"] = list(models)
-        new_block["init_params"] = list(init_params)
+        new_block["init_params"] = sorted(list(init_params))
         yield new_block
+
+
+def agg_model_ensembles(queries, agg_params):
+    if not agg_params["aggregate_model_ensembles"]:
+        yield from ([q] for q in queries)
+        return
+
+    model_index = build_models_index(queries, ignore_fields=["model", "init_params", "timespan"])
+    for blocks in model_index.values():
+        yield list(blocks)
 
 
 def build_models_index(queries, ignore_fields=None):

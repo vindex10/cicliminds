@@ -1,6 +1,11 @@
+from functools import partial
+
 import numpy as np
+import pandas as pd
 from ipywidgets import Label, VBox, HBox, Button, SelectMultiple
+
 from cicliminds.widgets.common import ObserverWidget
+from cicliminds.interface.query_builder import expand_model_scenarios
 
 
 class FilterWidget(ObserverWidget):
@@ -9,24 +14,40 @@ class FilterWidget(ObserverWidget):
     def __init__(self, datasets):
         self.datasets = datasets.copy()
         self.button_reset = self._get_reset_button()
+        self.button_refresh = self._get_refresh_button()
         self.filter_widgets = self._get_filter_widgets()
         super().__init__()
 
     def render(self):
-        filter_controls = VBox([self.button_reset])
+        filter_controls = HBox([self.button_reset, self.button_refresh])
         filter_widget_panel = self._get_filter_widget_panel()
         filter_widget = VBox([Label("Configuration filter:"),
                               filter_widget_panel,
                               filter_controls])
         return filter_widget
 
-    def get_filtered_dataset(self):
-        mask = np.full(self.datasets.shape[0], True)
-        for field, widget in self.filter_widgets.items():
-            if not widget.value:
+    def get_filtered_dataset(self, agg_params):
+        mask = pd.Series(np.full(self.datasets.shape[0], True), index=self.datasets.index)
+        filter_values = self.get_filter_values()
+        for field, values in filter_values.items():
+            if not values:
                 continue
-            mask = mask & self.datasets[field].isin(widget.value)
+            mask = mask & self.datasets[field].isin(values)
+        if np.count_nonzero(mask) < 200:
+            agg = agg_params["aggregate_years"]
+            blocks_with_mask = [(filter_values, mask)]
+            total_mask = pd.Series(np.full(self.datasets.shape[0], False), index=self.datasets.index)
+            for _, partial_mask in expand_model_scenarios(blocks_with_mask, filter_values, agg, self.datasets):
+                total_mask = total_mask | partial_mask
+            mask = mask & total_mask
         return self.datasets[mask].copy()
+
+    def get_filter_values(self):
+        res = {}
+        for field, widget in self.filter_widgets.items():
+            values = list(widget.value)
+            res[field] = values
+        return res
 
     def update_state_from_dataset(self, partial_dataset):
         for field, widget in self.filter_widgets.items():
@@ -38,7 +59,7 @@ class FilterWidget(ObserverWidget):
     def reset_filters(self):
         for widget in self.filter_widgets.values():
             widget.values = tuple()
-            widget.notify_change({"type": "change", "name": "value", "new": tuple()})
+            widget.notify_change({"type": "change", "name": "value", "new": widget.values})
 
     def _get_filter_widget_panel(self):
         filters = []
@@ -55,6 +76,11 @@ class FilterWidget(ObserverWidget):
     def _reset_filters(self, change):  # pylint: disable=unused-argument
         self.reset_filters()
 
+    def _get_refresh_button(self):
+        button_refresh = Button(description="Refresh filters", button_style="success", icon="redo")
+        button_refresh.on_click(self.trigger)
+        return button_refresh
+
     def _get_filter_widgets(self):
         filter_widgets = {}
         for field in self.FILTER_FIELDS:
@@ -63,6 +89,6 @@ class FilterWidget(ObserverWidget):
                 layout={"width": "auto", "margin": "0 20px 0 0"},
                 rows=10,
                 disabled=False)
-            widget.observe(self.trigger, names="value")
+            widget.observe(partial(self.propagate, [widget]), names="value")
             filter_widgets[field] = widget
         return filter_widgets

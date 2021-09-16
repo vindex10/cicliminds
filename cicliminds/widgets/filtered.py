@@ -12,7 +12,7 @@ class FilteredWidget:
 
     @staticmethod
     def _get_configurations_select():
-        return SelectMultiple(disabled=False, layout={"width": "auto"})
+        return SelectMultiple(layout={"width": "auto"}, disabled=True)
 
     def update_state_from_dataset(self, dataset):
         options = []

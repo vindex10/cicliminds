@@ -20,7 +20,7 @@ def process_block_query(fig, ax, datasets_reg, query):
     input_query, plot_query = query["input_query"], query["plot_query"]
     filtered_datasets_reg = filter_datasets_by_query(datasets_reg, input_query)
     datasets = merge_datasets_by_query(filtered_datasets_reg, input_query)
-    masked_dataset = mask_dataset_by_query(datasets, input_query)
+    masked_dataset = mask_dataset_by_query(datasets, plot_query)
     plot_config_patch = parse_plot_query(plot_query)
     annotate_plot_query(plot_config_patch, filtered_datasets_reg)
     plot_recipe = get_plot_recipe_by_query(plot_query)
@@ -138,8 +138,8 @@ def merge_models(datasets):
         yield (param_group[0][:1] + param_group[0][3:], merged)
 
 
-def mask_dataset_by_query(dataset, input_query):
-    masked_dataset = _mask_regions(dataset, input_query["regions"])
+def mask_dataset_by_query(dataset, plot_query):
+    masked_dataset = _mask_regions(dataset, plot_query["regions"])
     return masked_dataset
 
 

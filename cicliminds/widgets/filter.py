@@ -10,6 +10,7 @@ from cicliminds.interface.query_builder import expand_model_scenarios
 
 class FilterWidget(ObserverWidget):
     FILTER_FIELDS = ["model", "scenario", "init_params", "frequency", "timespan", "variable"]
+    DISABLED_FIELDS = ["timespan"]
 
     def __init__(self, datasets):
         self.datasets = datasets.copy()
@@ -88,7 +89,7 @@ class FilterWidget(ObserverWidget):
                 options=self.datasets[field].unique(),
                 layout={"width": "auto", "margin": "0 20px 0 0"},
                 rows=10,
-                disabled=False)
+                disabled=field in self.DISABLED_FIELDS)
             widget.observe(partial(self.propagate, [widget]), names="value")
             filter_widgets[field] = widget
         return filter_widgets

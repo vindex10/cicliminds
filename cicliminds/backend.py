@@ -1,4 +1,3 @@
-from itertools import chain
 from itertools import groupby
 
 import matplotlib.pyplot as plt
@@ -17,11 +16,13 @@ from cicliminds.interface.plot_types import get_plot_recipe_by_query
 from cicliminds.interface.plot_query_adapter import PlotQueryAdapter
 
 
-def process_block_query(fig, ax, datasets, query):
+def process_block_query(fig, ax, datasets_reg, query):
     input_query, plot_query = query["input_query"], query["plot_query"]
-    dataset = get_dataset_by_query(datasets, input_query)
-    masked_dataset = mask_dataset_by_query(dataset, input_query[0])
-    plot_config_patch = parse_plot_query(input_query[0], plot_query)
+    filtered_datasets_reg = filter_datasets_by_query(datasets_reg, input_query)
+    datasets = merge_datasets_by_query(filtered_datasets_reg, input_query)
+    masked_dataset = mask_dataset_by_query(datasets, input_query)
+    plot_config_patch = parse_plot_query(plot_query)
+    annotate_plot_query(plot_config_patch, filtered_datasets_reg)
     plot_recipe = get_plot_recipe_by_query(plot_query)
     plot_recipe.plot(ax, masked_dataset, plot_config_patch)
     ax.set_position((0, 0.15, 1, 0.85))
@@ -29,24 +30,24 @@ def process_block_query(fig, ax, datasets, query):
     plt.close()
 
 
-def get_dataset_by_query(datasets_reg, query):
-    datasets = []
-    for model_ensemble_query in query:
-        common_mask = (datasets_reg["model"].isin(model_ensemble_query["model"])) \
-                    & (datasets_reg["init_params"].isin(model_ensemble_query["init_params"])) \
-                    & (datasets_reg["frequency"] == model_ensemble_query["frequency"]) \
-                    & (datasets_reg["variable"] == model_ensemble_query["variable"]) \
-                    & (datasets_reg["scenario"].isin(model_ensemble_query["scenario"])) \
-                    & (datasets_reg["timespan"].isin(model_ensemble_query["timespan"]))
-        filtered_reg = sort_reg(datasets_reg[common_mask], model_ensemble_query)
-        ensemble_datasets = read_datasets(filtered_reg)
-        ensemble_datasets = list(merge_scenarios(ensemble_datasets))
-        datasets.append(ensemble_datasets)
-    merged = list(merge_models(chain.from_iterable(datasets)))
-    return merged[0][1]
+def merge_datasets_by_query(filtered_datasets_reg, query):
+    ordered_by_scenario_reg = order_reg_by_scenario(filtered_datasets_reg, query)
+    datasets = read_datasets(ordered_by_scenario_reg)
+    merged_scenarios = merge_scenarios(datasets)
+    merged_models = list(merge_models(merged_scenarios))
+    return merged_models[0][1]
 
 
-def sort_reg(datasets_reg, query):
+def filter_datasets_by_query(datasets_reg, query):
+    common_mask = (datasets_reg["model"].isin(query["model"])) \
+                & (datasets_reg["init_params"].isin(query["init_params"])) \
+                & (datasets_reg["frequency"] == query["frequency"][0]) \
+                & (datasets_reg["variable"] == query["variable"][0]) \
+                & (datasets_reg["scenario"].isin(query["scenario"]))
+    return datasets_reg[common_mask]
+
+
+def order_reg_by_scenario(datasets_reg, query):
     scenarios = query["scenario"]
 
     def scenario_to_idx(scenario):
@@ -84,8 +85,8 @@ def merge_scenarios(datasets):
     for _, scenario_group_iter in groupby(datasets, key=lambda row: row[0][:-1]):
         try:
             params, first_elem = next(scenario_group_iter)
-        except StopIteration:
-            return
+        except StopIteration as e:
+            raise Exception("something is wrong with scenario merging") from e
         scenario_group = [first_elem]
         for sc in scenario_group_iter:
             scenario_group.append(sc[1])
@@ -156,9 +157,12 @@ def _mask_regions(data, regions):
     return data.where(mask)
 
 
-def parse_plot_query(input_query, plot_query):
-    plot_query["init_year"] = min(int(year) for timespan in input_query["timespan"] for year in timespan.split("-"))
+def parse_plot_query(plot_query):
     return PlotQueryAdapter.from_json(plot_query)
+
+
+def annotate_plot_query(plot_query, datasets):
+    plot_query["init_year"] = min(int(year) for timespan in datasets["timespan"].values for year in timespan.split("-"))
 
 
 def add_plot_descriptions(fig, ax, dataset, plot_query):

@@ -84,7 +84,7 @@ class App:  # pylint: disable=too-few-public-methods
         self._update_filters()
 
     def _stage_action(self, objs, change):  # pylint: disable=unused-argument
-        staging_widget = objs[0]
+        staging_widget = self.state["staging_widget"]
         agg_params = staging_widget.get_state()
         filter_values = self.state["filter_widget"].get_filter_values()
         queries_to_add = list(expand_state_into_queries(self.datasets, filter_values, agg_params))

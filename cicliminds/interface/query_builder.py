@@ -22,7 +22,7 @@ def expand_state_into_queries(datasets, filter_values, agg_params):
 
 def append_plot_query_defaults(input_query, plot_query):
     plot_recipe = get_plot_recipe_by_query(plot_query)
-    plot_config_defaults = asdict(plot_recipe.get_default_config(input_query[0]["variable"]))
+    plot_config_defaults = asdict(plot_recipe.get_default_config(input_query["variable"][0]))
     plot_config_defaults.update(plot_query)
     plot_query_defaults = PlotQueryAdapter.to_json(deepcopy(plot_config_defaults), restrictive=False)
     return plot_query_defaults
@@ -56,12 +56,13 @@ def expand_input_queries(datasets, filter_values, agg_params):
     blocks_with_mask = expand_filters(datasets, filter_values, agg_params)
     blocks = (block for block, mask in blocks_with_mask)
     blocks = expand_regions(blocks, agg_params)
-    yield from blocks
+    yield from blocks_to_json_like(blocks)
 
 
 def expand_filters(datasets, filter_values, agg_params):
     mask = pd.Series(np.full(datasets.shape[0], True), index=datasets.index)
     blocks_with_mask = [({}, mask)]
+    blocks_with_mask = expand_model_field(blocks_with_mask, "variable", filter_values, False, datasets)
     blocks_with_mask = expand_model_field(blocks_with_mask, "model", filter_values,
                                           agg_params["aggregate_models"], datasets)
     blocks_with_mask = expand_model_field(blocks_with_mask, "init_params", filter_values,
@@ -69,6 +70,14 @@ def expand_filters(datasets, filter_values, agg_params):
     blocks_with_mask = expand_model_field(blocks_with_mask, "frequency", filter_values, False, datasets)
     blocks_with_mask = expand_model_scenarios(blocks_with_mask, filter_values, agg_params["aggregate_years"], datasets)
     yield from blocks_with_mask
+
+
+def blocks_to_json_like(blocks):
+    for block in blocks:
+        for key, val in block.items():
+            if not isinstance(val, list):
+                block[key] = list(val)
+        yield block
 
 
 def apply_scenario_filter(datasets, mask, scenarios):

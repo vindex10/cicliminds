@@ -9,8 +9,8 @@ from cicliminds.widgets.staged import StagedWidget
 from cicliminds.widgets.block import BlockWidget
 from cicliminds.widgets.state_mgmt import StateMgmtWidget
 
-from cicliminds.interface.query_builder import expand_state_into_queries
-from cicliminds.backend import process_block_query
+from cicliminds.interface.query_builder.query_builder import expand_state_into_queries
+from cicliminds.backend.backend import process_block_query
 
 
 class App:  # pylint: disable=too-few-public-methods
@@ -25,7 +25,8 @@ class App:  # pylint: disable=too-few-public-methods
 
     def _get_filter_widget(self):
         filter_widget = FilterWidget(self.datasets)
-        filter_widget.observe(self._update_filters)
+        filter_widget.observe(self._update_filters_action)
+        filter_widget.observe(self._filters_refresh_action)
         return filter_widget
 
     def _get_staging_widget(self):
@@ -53,19 +54,40 @@ class App:  # pylint: disable=too-few-public-methods
         self.state["filter_widget"].reset_filters()
         return app
 
-    def _update_filters(self, objs, change):  # pylint: disable=unused-argument
-        filters_widget = objs[0]
-        filtered_dataset = filters_widget.get_filtered_dataset()
+    def _update_filters_action(self, objs, change):  # pylint: disable=unused-argument
+        if not self._is_filter_value_change_action(objs, change):
+            return
+        self._update_filters()
+
+    def _update_filters(self):
+        filters_widget = self.state["filter_widget"]
+        staging_widget = self.state["staging_widget"]
+        agg_params = staging_widget.get_state()
+        filtered_dataset = filters_widget.get_filtered_dataset(agg_params)
         filters_widget.update_state_from_dataset(filtered_dataset)
         if filtered_dataset.shape[0] > 200:
             return
         self.state["filtered_widget"].update_state_from_dataset(filtered_dataset)
 
+    @staticmethod
+    def _is_filter_value_change_action(objs, change):  # pylint: disable=unused-argument
+        try:
+            if objs[1] not in objs[0].filter_widgets.values():
+                return False
+        except IndexError:
+            return False
+        return True
+
+    def _filters_refresh_action(self, objs, change):  # pylint: disable=unused-argument
+        if change is not self.state["filter_widget"].button_refresh:
+            return
+        self._update_filters()
+
     def _stage_action(self, objs, change):  # pylint: disable=unused-argument
-        staging_widget = objs[0]
-        to_agg = self.state["filtered_widget"].get_selected_dataset()
+        staging_widget = self.state["staging_widget"]
         agg_params = staging_widget.get_state()
-        queries_to_add = list(expand_state_into_queries(to_agg, agg_params))
+        filter_values = self.state["filter_widget"].get_filter_values()
+        queries_to_add = list(expand_state_into_queries(self.datasets, filter_values, agg_params))
         self.state["staged_widget"].add_blocks_from_queries(queries_to_add)
 
     def _rebuild_one_block_action(self, objs, change):

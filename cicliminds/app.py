@@ -10,7 +10,7 @@ from cicliminds.widgets.block import BlockWidget
 from cicliminds.widgets.state_mgmt import StateMgmtWidget
 
 from cicliminds.interface.query_builder.query_builder import expand_state_into_queries
-from cicliminds.backend import process_block_query
+from cicliminds.backend.backend import process_block_query
 
 
 class App:  # pylint: disable=too-few-public-methods

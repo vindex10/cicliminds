@@ -2,7 +2,7 @@ import os
 import json
 import matplotlib.pyplot as plt
 from cicliminds_lib.query.files import get_datasets
-from cicliminds.backend import process_block_query
+from cicliminds.backend.backend import process_block_query
 
 
 def main(data_dir, query):

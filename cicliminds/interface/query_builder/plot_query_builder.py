@@ -1,8 +1,9 @@
 from copy import deepcopy
 from dataclasses import asdict
 
-from cicliminds.interface.query_builder.basic_expanders import expand_field
+from cicliminds_lib.masks import REFERENCE_REGIONS
 
+from cicliminds.interface.query_builder.basic_expanders import expand_field
 from cicliminds.interface.plot_query_adapter import PlotQueryAdapter
 from cicliminds.interface.plot_types import get_plot_recipe_by_query
 
@@ -23,8 +24,12 @@ def expand_plot_queries(agg_params):
 def expand_regions(res, agg_params):
     selected_regions = agg_params["select_regions"] or []
     aggregate_regions = agg_params["aggregate_regions"]
-    if aggregate_regions or not selected_regions:
+    if aggregate_regions:
         selected_regions = [selected_regions]
+    elif selected_regions:
+        selected_regions = [[r] for r in selected_regions]
+    else:
+        selected_regions = [[f'{r.abbrev}'] for r in REFERENCE_REGIONS]
     res = expand_field(res, "regions", selected_regions)
     return res
 

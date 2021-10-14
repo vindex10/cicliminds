@@ -1,18 +1,17 @@
 from itertools import groupby
 
-import numpy as np
 import pandas as pd
 import xarray as xr
 
-import cftime
-
+from cicliminds.interface.datasets import get_datasets_for_block
 from cicliminds.backend.normalize import safe_drop_bounds
 from cicliminds.backend.normalize import get_coarsest_grid
-from cicliminds.backend.normalize import unify_models_times
+from cicliminds.backend.normalize import normalize_time
 from cicliminds.backend.normalize import regrid_model_group
 
 
-def get_merged_dataset_by_query(filtered_datasets_reg, query):
+def get_merged_dataset_by_query(datasets_reg, query):
+    filtered_datasets_reg = get_datasets_for_block(datasets_reg, query)
     ordered_by_scenario_reg = order_reg_by_scenario(filtered_datasets_reg, query)
     datasets = read_datasets(ordered_by_scenario_reg)
     merged_scenarios = merge_scenarios(datasets)
@@ -36,11 +35,11 @@ def order_reg_by_scenario(datasets_reg, query):
 def read_datasets(datasets_reg):
     for fname, params in datasets_reg.iterrows():
         list_params = [params[f] for f in ["variable", "model", "init_params", "frequency", "scenario"]]
-        dataset = xr.load_dataset(fname)
-        if not isinstance(dataset.time.values[0], np.datetime64):
-            dataset["time"] = cftime.date2num(dataset.time.values, "seconds since 1970-01-01").astype("datetime64[s]")
+        dataset = xr.load_dataset(fname, use_cftime=False, decode_times=False)
         dataset = safe_drop_bounds(dataset, ["time", "lon", "lat"])
-        yield (list_params, dataset)
+        freq = list_params[-2]
+        common_time_ds = normalize_time(dataset, freq)
+        yield (list_params, common_time_ds)
 
 
 def merge_scenarios(datasets):
@@ -53,7 +52,8 @@ def merge_scenarios(datasets):
         scenario_group = [first_elem]
         for sc in scenario_group_iter:
             scenario_group.append(sc[1])
-        merged = xr.concat(scenario_group, dim="time", data_vars="all")
+        merged = xr.concat(scenario_group, dim="time", data_vars="all", join="override")
+        merged.attrs["merged_from"] = ",".join(params)
         yield (params[:-1], merged)
 
 
@@ -63,10 +63,9 @@ def merge_models(datasets):
         model_names = [f"{p[1]}_{p[2]}" for p in param_group]
         model_names_axis = pd.Series(model_names, name="model")
         if len(model_group) > 1:
-            timerange, lon, lat = get_coarsest_grid(model_group)
-            common_time_models = unify_models_times(model_group, slice(0, timerange))
-            common_grid_models = regrid_model_group(common_time_models, lon, lat)
-            merged = xr.concat(common_grid_models, dim=model_names_axis)
+            lon, lat = get_coarsest_grid(model_group)
+            common_grid_models = regrid_model_group(model_group, lon, lat)
+            merged = xr.concat(common_grid_models, dim=model_names_axis, join="inner")
         else:
             merged = model_group[0].expand_dims({"model": model_names})
         yield (param_group[0][:1] + param_group[0][3:], merged)

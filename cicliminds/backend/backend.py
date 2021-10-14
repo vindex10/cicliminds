@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import xarray as xr
+import cftime
 
 from cicliminds_lib.masks import get_land_mask
 from cicliminds_lib.masks import get_antarctica_mask
@@ -8,21 +9,15 @@ from cicliminds_lib.masks import iter_reference_region_masks
 from cicliminds_lib.plotting._helpers import _get_variable_name
 
 from cicliminds.backend.merge import get_merged_dataset_by_query
-
-from cicliminds.interface.datasets import get_datasets_for_block
 from cicliminds.interface.plot_types import get_plot_recipe_by_query
 from cicliminds.interface.plot_query_adapter import PlotQueryAdapter
 
 
 def process_block_query(fig, ax, datasets_reg, query):
     input_query, plot_query = query["input_query"], query["plot_query"]
-
-    filtered_datasets_reg = get_datasets_for_block(datasets_reg, input_query)
-
-    datasets = get_merged_dataset_by_query(filtered_datasets_reg, input_query)
+    datasets = get_merged_dataset_by_query(datasets_reg, input_query)
     masked_dataset = mask_dataset_by_query(datasets, plot_query)
-
-    plot_datasets(fig, ax, filtered_datasets_reg, masked_dataset, plot_query)
+    plot_datasets(fig, ax, masked_dataset, plot_query)
 
 
 def mask_dataset_by_query(dataset, plot_query):
@@ -44,23 +39,25 @@ def _mask_regions(data, regions):
     return data.where(mask)
 
 
-def plot_datasets(fig, ax, filtered_datasets_reg, masked_dataset, plot_query):
+def plot_datasets(fig, ax, masked_dataset, plot_query):
     plot_recipe = get_plot_recipe_by_query(plot_query)
-    recipe_config = get_recipe_config(plot_query, filtered_datasets_reg)
+    recipe_config = get_recipe_config(plot_query, masked_dataset)
     plot_recipe.plot(ax, masked_dataset, recipe_config)
-    ax.set_position((0, 0.15, 1, 0.85))
+    ax.set_position((0, 0.25, 1, 0.85))
     add_plot_descriptions(fig, ax, masked_dataset, plot_query)
     plt.close()
 
 
-def get_recipe_config(plot_query, filtered_datasets_reg):
+def get_recipe_config(plot_query, masked_dataset):
     parsed_query = PlotQueryAdapter.from_json(plot_query)
-    annotate_plot_query(parsed_query, filtered_datasets_reg)
+    annotate_plot_query(parsed_query, masked_dataset)
     return parsed_query
 
 
-def annotate_plot_query(plot_query, datasets):
-    plot_query["init_year"] = min(int(year) for timespan in datasets["timespan"].values for year in timespan.split("-"))
+def annotate_plot_query(plot_query, masked_dataset):
+    plot_query["init_year"] = cftime.num2date(masked_dataset.time.data[0],
+                                              masked_dataset.time.attrs["units"],
+                                              masked_dataset.time.attrs["calendar"]).year
 
 
 def add_plot_descriptions(fig, ax, dataset, plot_query):
@@ -71,4 +68,4 @@ def add_plot_descriptions(fig, ax, dataset, plot_query):
     type_tag = f"{plot_query['plot_type']}{reference_tag}"
     title = f"{variable} [{type_tag}]"
     ax.set_title(title)
-    fig.text(0, 0, f"Index description: {description}", wrap=True)
+    fig.text(0, 0, f"Index description: {description}\nRegions: {','.join(plot_query['regions'])}", wrap=True)

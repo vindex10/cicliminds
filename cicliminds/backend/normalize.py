@@ -1,4 +1,10 @@
+import cftime
+from cfunits import Units
 from cicliminds_lib.bindings import cdo_remapcon_from_data
+
+REFERENCE_YEAR = 1800
+REFERENCE_CALENDAR = "360_day"
+_REFERENCE_DATETIME = cftime.datetime(REFERENCE_YEAR, 1, 1, calendar=REFERENCE_CALENDAR)
 
 
 def safe_drop_bounds(dataset, fields):
@@ -15,22 +21,38 @@ def safe_drop_bounds(dataset, fields):
 def get_coarsest_grid(model_group):
     lon_dims = []
     lat_dims = []
-    time_dims = []
     for model in model_group:
         lat_dims.append(model.lat.shape[0])
         lon_dims.append(model.lon.shape[0])
-        time_dims.append(model.time.shape[0])
-    return min(time_dims), min(lon_dims), min(lat_dims)
+    return min(lon_dims), min(lat_dims)
 
 
-def unify_models_times(model_group, timeslice):
-    res = []
-    first_time = model_group[0].isel(time=timeslice).time
-    for model in model_group:
-        new = model.isel(time=timeslice).copy()
-        new["time"] = first_time
-        res.append(new)
-    return res
+def normalize_time(model, freq):
+    model_time = model["time"]
+    norm_time = normalize_calendar(model_time, model_time.units, model_time.calendar)
+    coarsened_time = coarsen_time(norm_time, freq)
+    new_model = model.assign_coords({"time": coarsened_time})
+    new_model["time"].attrs.update({"units": f"days since {REFERENCE_YEAR}-1-1",
+                                    "calendar": REFERENCE_CALENDAR})
+    return new_model
+
+
+def normalize_calendar(time, units, calendar):
+    this_origin = Units(units, calendar).reftime
+    this_y, this_m, this_d, *_ = this_origin.timetuple()
+    std_origin = cftime.datetime(this_y, this_m, this_d, calendar="360_day")
+    diff = (std_origin - _REFERENCE_DATETIME).days
+    return diff + time
+
+
+def coarsen_time(time, freq):
+    # reference calendar is 360_day
+    scales = {
+        "yr": 360,
+        "mon": 30
+    }
+    scale_factor = scales[freq]
+    return (time // scale_factor)*scale_factor
 
 
 def regrid_model_group(model_group, lon, lat):

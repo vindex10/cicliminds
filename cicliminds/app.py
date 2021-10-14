@@ -1,4 +1,9 @@
+import os
+import json
+from datetime import datetime
+
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 from IPython.display import clear_output, display
 from ipywidgets import VBox
 
@@ -42,6 +47,7 @@ class App:  # pylint: disable=too-few-public-methods
     def _get_state_mgmt_widget(self):
         state_mgmt_widget = StateMgmtWidget()
         state_mgmt_widget.observe(self._dump_state_action)
+        state_mgmt_widget.observe(self._save_pdf_action)
         state_mgmt_widget.observe(self._stage_state_action)
         return state_mgmt_widget
 
@@ -97,6 +103,7 @@ class App:  # pylint: disable=too-few-public-methods
         query = block_widget.get_query()
         fig, ax = plt.subplots()
         process_block_query(fig, ax, self.datasets, query)
+        block_widget.replace_real_output(fig)
         with block_widget.capture_output():
             clear_output()
             display(fig)
@@ -120,6 +127,23 @@ class App:  # pylint: disable=too-few-public-methods
             return
         current_state = self.state["staged_widget"].get_state()
         state_mgmt_widget.set_state(current_state)
+
+    def _save_pdf_action(self, objs, change):  # pylint: disable=unused-argument
+        state_mgmt_widget = self.state["state_mgmt_widget"]
+        if change is not state_mgmt_widget.state["save_pdf_button"]:
+            return
+        output_dir = "/tmp/cicliminds-pdfs"
+        os.makedirs(output_dir, exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%dT%H%M")
+        current_state = self.state["staged_widget"].get_state()
+        output_filename = os.path.join(output_dir, f"{ts}-cicliminds-output.pdf")
+        with PdfPages(output_filename) as pdf:
+            pdf.infodict()["query"] = json.dumps(current_state, indent=True)
+            for block in self.state["staged_widget"]._block_widgets:
+                fig = block.get_real_output()
+                fig.tight_layout()
+                pdf.savefig(fig)
+        state_mgmt_widget.set_state(f"Saved to: {output_filename}")
 
     def _stage_state_action(self, objs, change):  # pylint: disable=unused-argument
         state_mgmt_widget = self.state["state_mgmt_widget"]

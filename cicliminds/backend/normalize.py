@@ -58,6 +58,10 @@ def coarsen_time(time, freq):
 def regrid_model_group(model_group, lon, lat):
     res = []
     for model in model_group:
+        cur_lon, cur_lat = model.lon.shape[0], model.lat.shape[0]
+        if (cur_lon == lon) or (cur_lat == lat):
+            res.append(model)
+            continue
         regrided_model = cdo_remapcon_from_data(model, lon, lat)
         res.append(regrided_model)
     return res

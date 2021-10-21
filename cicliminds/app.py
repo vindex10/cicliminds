@@ -141,6 +141,8 @@ class App:  # pylint: disable=too-few-public-methods
             pdf.infodict()["query"] = json.dumps(current_state, indent=True)
             for block in self.state["staged_widget"]._block_widgets:
                 fig = block.get_real_output()
+                if fig is None:
+                    continue
                 fig.tight_layout()
                 pdf.savefig(fig)
         state_mgmt_widget.set_state(f"Saved to: {output_filename}")

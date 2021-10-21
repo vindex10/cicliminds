@@ -6,7 +6,9 @@ import xarray as xr
 from cicliminds.interface.datasets import get_datasets_for_block
 from cicliminds.backend.normalize import safe_drop_bounds
 from cicliminds.backend.normalize import get_coarsest_grid
-from cicliminds.backend.normalize import normalize_time
+from cicliminds.backend.normalize import normalize_calendar
+from cicliminds.backend.normalize import infer_common_time_axis
+from cicliminds.backend.normalize import align_time_axes
 from cicliminds.backend.normalize import regrid_model_group
 
 
@@ -26,7 +28,7 @@ def order_reg_by_scenario(datasets_reg, query):
         return scenarios.index(scenario)
 
     new_reg = datasets_reg.copy()
-    new_reg["scenario_idx"] = pd.Series([scenario_to_idx(sc) for sc in new_reg["scenario"]])
+    new_reg["scenario_idx"] = pd.Series([scenario_to_idx(sc) for sc in new_reg["scenario"]], index=new_reg.index)
     new_reg.sort_values(by=["variable", "model", "init_params", "frequency", "scenario_idx"], inplace=True)
     del new_reg["scenario_idx"]
     return new_reg
@@ -38,7 +40,7 @@ def read_datasets(datasets_reg):
         dataset = xr.load_dataset(fname, use_cftime=False, decode_times=False)
         dataset = safe_drop_bounds(dataset, ["time", "lon", "lat"])
         freq = list_params[-2]
-        common_time_ds = normalize_time(dataset, freq)
+        common_time_ds = normalize_calendar(dataset, freq)
         yield (list_params, common_time_ds)
 
 
@@ -50,8 +52,12 @@ def merge_scenarios(datasets):
             # otherwise might just raise StopIteration when it should fail
             raise Exception("something is wrong with scenario merging") from e
         scenario_group = [first_elem]
+        last_date = first_elem.time.data[-1]
         for sc in scenario_group_iter:
-            scenario_group.append(sc[1])
+            next_sc = sc[1].sel(time=slice(last_date + 0.5, None))
+            scenario_group.append(next_sc)
+            last_date = next_sc.time.data[-1]
+        # we assume that projection starts at the moment when historical scenario ends
         merged = xr.concat(scenario_group, dim="time", data_vars="all", join="override")
         merged.attrs["merged_from"] = ",".join(params)
         yield (params[:-1], merged)
@@ -63,9 +69,11 @@ def merge_models(datasets):
         model_names = [f"{p[1]}_{p[2]}" for p in param_group]
         model_names_axis = pd.Series(model_names, name="model")
         if len(model_group) > 1:
-            lon, lat = get_coarsest_grid(model_group)
-            common_grid_models = regrid_model_group(model_group, lon, lat)
-            merged = xr.concat(common_grid_models, dim=model_names_axis, join="inner")
+            init_days, time_dim = infer_common_time_axis([m.time.data for m in model_group])
+            time_aligned = align_time_axes(model_group, init_days, time_dim)
+            lon, lat = get_coarsest_grid(time_aligned)
+            common_grid_models = regrid_model_group(time_aligned, lon, lat)
+            merged = xr.concat(common_grid_models, dim=model_names_axis, join="override")
         else:
             merged = model_group[0].expand_dims({"model": model_names})
         yield (param_group[0][:1] + param_group[0][3:], merged)

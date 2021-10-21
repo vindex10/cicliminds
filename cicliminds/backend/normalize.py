@@ -1,5 +1,7 @@
+import numpy as np
+import scipy as sp
+from scipy import stats
 import cftime
-from cfunits import Units
 from cicliminds_lib.bindings import cdo_remapcon_from_data
 
 REFERENCE_YEAR = 1800
@@ -27,32 +29,40 @@ def get_coarsest_grid(model_group):
     return min(lon_dims), min(lat_dims)
 
 
-def normalize_time(model, freq):
+def normalize_calendar(model, freq):
     model_time = model["time"]
-    norm_time = normalize_calendar(model_time, model_time.units, model_time.calendar)
-    coarsened_time = coarsen_time(norm_time, freq)
-    new_model = model.assign_coords({"time": coarsened_time})
+    norm_time = normalize_calendar_series(model_time, model_time.units, model_time.calendar)
+    new_model = model.assign_coords({"time": norm_time})
     new_model["time"].attrs.update({"units": f"days since {REFERENCE_YEAR}-1-1",
                                     "calendar": REFERENCE_CALENDAR})
     return new_model
 
 
-def normalize_calendar(time, units, calendar):
-    this_origin = Units(units, calendar).reftime
+def normalize_calendar_series(time, units, calendar):
+    this_origin = cftime.num2date(time[0], units=units, calendar=calendar)
     this_y, this_m, this_d, *_ = this_origin.timetuple()
     std_origin = cftime.datetime(this_y, this_m, this_d, calendar="360_day")
     diff = (std_origin - _REFERENCE_DATETIME).days
-    return diff + time
+    return diff + time - time[0]
 
 
-def coarsen_time(time, freq):
-    # reference calendar is 360_day
-    scales = {
-        "yr": 360,
-        "mon": 30
-    }
-    scale_factor = scales[freq]
-    return (time // scale_factor)*scale_factor
+def align_time_axes(models, init_days, time_dim):
+    res = []
+    for model in models:
+        new_model = model.sel(time=slice(init_days, None))
+        new_model = new_model.isel(time=slice(None, time_dim))
+        res.append(new_model)
+    return res
+
+
+def infer_common_time_axis(time_axes):
+    inits = [time_axis[0] for time_axis in time_axes]
+    init_days = np.quantile(inits, 0.3)
+    time_dims = []
+    for time_axis in time_axes:
+        time_dims.append(time_axis[time_axis >= init_days].shape[0])
+    time_dim = np.min(time_dims)
+    return init_days, time_dim
 
 
 def regrid_model_group(model_group, lon, lat):

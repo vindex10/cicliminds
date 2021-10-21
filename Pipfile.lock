@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3c7029f2148ec7b1fba929c33c0d30c338a3b0e298dd156d7a39991e6190ce0c"
+            "sha256": "a14aeedf11d69c6795c8c2a42da9d7eb97e6287edcb6f9b755d90229b34fa700"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -200,7 +200,7 @@
         },
         "cicliminds-lib": {
             "git": "https://github.com/vindex10/cicliminds-lib",
-            "ref": "51bb5cf08f9611252ab81bd44d38743c297c54fd"
+            "ref": "d4f7c22ce0f84d3878fe69cf129c9729da8eb84c"
         },
         "click": {
             "hashes": [

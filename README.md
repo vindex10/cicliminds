@@ -21,19 +21,19 @@ DATA_DIR="path/to/data" PYTHONPATH="`pwd`" jupyter lab .
 
 The flow of producing the plot consists of several stages:
 
-* Filter datasets. Choose model, scenario, ensemble members, variable names
-* Tune properties:
+* *Filter datasets*. Choose model, scenario, ensemble members, variable names
+* *Tune properties:*
     - select regions
     - specify whether to aggregate models (scenarios, ensemble members, etc) or build a plot for each of them
     - choose plot type (what will be plotted)
     - tune parameters relevant to the chosen plot type (time window step, width, etc)
-* Stage plots before building. When aggregations do not reduce datasets to a single plot, several plots
+* *Stage plots* before building. When aggregations do not reduce datasets to a single plot, several plots
     may be produced. Before actually plotting, one staged block per future plot will appear in the bottom.
-* Fine tune staged blocks if needed and build! Configuration stored inside the block fully defines the plot.
-* If needed, fine tune again and rebuild only those that you modified.
-* Want to save the work? Dump the settings stored in the staged blocks into a text field (copy and store to the file manually).
-    Paste and restore stored settting when needed
-* Store plots to PDF. Path to the file will appear in the text field.
+* *Fine tune* staged blocks if needed and build! Configuration stored inside the block fully defines the plot.
+* If needed, fine tune again and *rebuild* only those that you modified.
+* Want to save the work? *Dump the settings* stored in the staged blocks into a text field (copy and store to the file manually).
+    Paste and *restore stored setttings* when needed
+* *Store plots to PDF*. Path to the file will appear in the text field.
     Experimental functionality, for now only stores the plot on the server. To download it, user must have
     direct access to the server runnin the notebook.
 
@@ -43,15 +43,16 @@ The flow of producing the plot consists of several stages:
 <p><img src="docs/img/filters.png" width="100%" /></p>
 
 There are 5 filters that can be applied to choose datasets of interest:
-    * model
-    * scenario
-    * init\_params (ensemble members)
-    * frequency (monthly or yearly data)
-    * variable name (specify ETCCDI indexes)
+
+* model
+* scenario
+* init\_params (ensemble members)
+* frequency (monthly or yearly data)
+* variable name (specify ETCCDI indexes)
 
 There is one extra field, `timespan` which is inactive but updates according to the filtered datasets.
 
-It is useful to think of logical `OR` respectively to the options within one filter block,
+It is useful to think of logical `OR` in respect to the options within one filter block,
 and logical `AND` across the blocks.
 
 When a block is modified all the other blocks update their options accordingly to the current
@@ -68,31 +69,32 @@ filter box keeps updating according to other filter boxes, when they are modifie
 
 Staging area is the main control panel of the App. Here you specify:
 
-    * Regions to focus on. You can select a range with `Shift` or specify several regions with `Ctrl`.
-    * Specify how to aggregate datasets:
-        - years — stack selected projection scenarios after historical. As a result as many plots
-            will be produced as projection scenarios selected, each of them prepended with historical (if selected)
-        - regions - all selected regions will be present in one plot. When unchecked, one plot per region will be produced
-        - models - data points of all selected models will be pulled together. As part of this action, datasets will be 
-            downscaled to the coarsed grid among all selected datasets, and time axes will be aligned to each other.
-            When unchecked - one plot per model
-        - model ensembles - `init_params` will be pulled together. May introduce imbalance, if one model has much larger
-            set of present ensemble members
-    * Plot type:
-        - fldmean first - first do weighted mean over the globe, then produce histogram
-            of the variable over the time ranges. (experimental, not yet fully supported)
-        - fldmean last - first produce histograms of the variable over the time range, for each grid point,
-            then do weighted mean over the globe.
-        - avg time — histogram over earth grid points of values of the variable averaged over
-            the time range. (experimental, not yet fully supported)
-    * Plot modifiers:
-        - subtract reference — hide the reference histogram, and subtract it from all the consequent ones
-        - normalize histograms - when the reference time range differs from the sliding window size, histograms
-            will need to be normalized in order to be comparable
-    * Sliding window parameters (measured in point on the time axis):
-        - reference window size - initial histogram can be produced on the larger time range than consequent ones
-        - sliding window size - width of the window that will slide, to produce consequent histograms
-        - slide step - sliding window shifts by this amount of points along the time axis to produce next histogram
+* Regions to focus on. You can select a range with `Shift` or specify several regions with `Ctrl`.
+    No regions selected means All regions.
+* Specify how to *aggregate datasets*:
+    - **years** — stack selected projection scenarios after historical. As a result as many plots
+        will be produced as projection scenarios selected, each of them prepended with historical (if selected)
+    - **regions** - all selected regions will be present in one plot. When unchecked, one plot per region will be produced
+    - **models** - data points of all selected models will be pulled together. As part of this action, datasets will be 
+        downscaled to the coarsed grid among all selected datasets, and time axes will be aligned to each other.
+        When unchecked - one plot per model
+    - **model ensembles** - `init_params` will be pulled together. May introduce imbalance, if one model has much larger
+        set of present ensemble members
+* Plot type:
+    - **fldmean first** - first do weighted mean over the globe, then produce histogram
+        of the variable over the time ranges. (experimental, not yet fully supported)
+    - **fldmean last** - first produce histograms of the variable over the time range, for each grid point,
+        then do weighted mean over the globe.
+    - **avg time** — histogram over earth grid points of values of the variable averaged over
+        the time range. (experimental, not yet fully supported)
+* Plot modifiers:
+    - **subtract reference** — hide the reference histogram, and subtract it from all the consequent ones
+    - **normalize histograms** - when the reference time range differs from the sliding window size, histograms
+        will need to be normalized in order to be comparable
+* Sliding window parameters (measured in point on the time axis):
+    - **reference window size** - initial histogram can be produced on the larger time range than consequent ones
+    - **sliding window size** - width of the window that will slide, to produce consequent histograms
+    - **slide step** - sliding window shifts by this amount of points along the time axis to produce next histogram
 
 When all the controls are adapted to the needs, click `Stage` to add plot blocks to the panel below.
 

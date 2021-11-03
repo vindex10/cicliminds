@@ -40,7 +40,7 @@ The flow of producing the plot consists of several stages:
 
 ### Filter datasets
 
-<p><img src="docs/img/filters.png" width="60%" /></p>
+<p><img src="docs/img/filters.png" width="100%" /></p>
 
 There are 5 filters that can be applied to choose datasets of interest:
     * model
@@ -64,7 +64,7 @@ filter box keeps updating according to other filter boxes, when they are modifie
 
 ### Tune properties (staging area)
 
-<p><img src="docs/img/staging.png" width="60%" /></p>
+<p><img src="docs/img/staging.png" width="100%" /></p>
 
 Staging area is the main control panel of the App. Here you specify:
 
@@ -98,7 +98,7 @@ When all the controls are adapted to the needs, click `Stage` to add plot blocks
 
 ### Staged area
 
-<p><img src="docs/img/staged.png" width="60%" /></p>
+<p><img src="docs/img/staged.png" width="100%" /></p>
 
 Here plot blocks appear when staged from the staging area. You can modify datasets and plot parameters
 and stage more blocks to this panel independently.
@@ -114,7 +114,7 @@ Click:
 
 ### Save and restore
 
-<p><img src="docs/img/save_restore.png" width="60%" /></p>
+<p><img src="docs/img/save_restore.png" width="100%" /></p>
 
 The contents of the staged blocks completely define the plots produced. To save the work and be able to
 reproduce it or come back and continue from where you've left, click `Dump`. Contents of the staged blocks

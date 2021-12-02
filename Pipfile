@@ -8,10 +8,7 @@ jupyterlab = "*"
 cicliminds-lib = {ref = "0.6.4", git = "https://github.com/vindex10/cicliminds-lib"}
 matplotlib = "*"
 numpy = "*"
-scipy = "*"
 pandas = "*"
-xarray = "*"
-cftime = "*"
 ipywidgets = "*"
 
 [dev-packages]

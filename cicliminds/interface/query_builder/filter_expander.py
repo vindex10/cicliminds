@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from cicliminds.interface.scenarios import get_scenario_pairs
-from cicliminds.interface.scenarios import apply_scenario_filter
-
+from cicliminds.interface.datasets import apply_scenario_filter
 from cicliminds.interface.query_builder.basic_expanders import expand_field
 from cicliminds.interface.query_builder.basic_expanders import drop_nonexisting_blocks
 from cicliminds.interface.query_builder.basic_expanders import reduce_values_to_existing
@@ -44,7 +42,7 @@ def expand_model_scenarios(blocks_with_mask, filter_values, agg_scenarios, agg_y
     if agg_scenarios:
         values = [values]
     elif agg_years:
-        values = get_scenario_pairs(values)
+        values = _get_scenario_pairs(values)
     else:
         values = [[i] for i in values]
 
@@ -54,6 +52,14 @@ def expand_model_scenarios(blocks_with_mask, filter_values, agg_scenarios, agg_y
         only_existing_blocks = drop_nonexisting_blocks(unfiltered_blocks, known_mask, scenarios_column)
         only_full_scenarios = apply_scenario_filter_to_blocks(only_existing_blocks, datasets)
         yield from reduce_values_to_existing(only_full_scenarios, scenarios_column)
+
+
+def _get_scenario_pairs(scenarios):
+    if "historical" not in scenarios:
+        return [[scenario] for scenario in scenarios]
+    if len(scenarios) == 1:
+        return [["historical"]]
+    return [["historical", scenario] for scenario in scenarios if scenario != "historical"]
 
 
 def apply_scenario_filter_to_blocks(blocks_with_mask, datasets):

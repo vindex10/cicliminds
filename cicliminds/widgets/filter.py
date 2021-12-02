@@ -1,11 +1,12 @@
 from functools import partial
 
 import numpy as np
+import pandas as pd
 from ipywidgets import Label, VBox, HBox, Button, SelectMultiple
 
 from cicliminds.widgets.common import ObserverWidget
 from cicliminds.interface.datasets import get_shallow_filters_mask
-from cicliminds.interface.datasets import get_scenarios_mask
+from cicliminds.interface.query_builder.filter_expander import expand_model_scenarios
 
 
 class FilterWidget(ObserverWidget):
@@ -31,10 +32,18 @@ class FilterWidget(ObserverWidget):
         filter_values = self.get_filter_values()
         mask = get_shallow_filters_mask(self.datasets, filter_values)
         if np.count_nonzero(mask) < 200:
-            mask = mask & get_scenarios_mask(self.datasets, mask,
-                                             agg_params["aggregate_scenarios"], agg_params["aggregate_years"],
-                                             filter_values)
+            mask = mask & self.get_scenarios_mask(self.datasets, mask,
+                                                  agg_params["aggregate_scenarios"], agg_params["aggregate_years"],
+                                                  filter_values)
         return self.datasets[mask].copy()
+
+    @staticmethod
+    def get_scenarios_mask(datasets_reg, mask, agg_scenarios, agg_years, query):
+        blocks_with_mask = [(query, mask)]
+        scenarios_mask = pd.Series(np.full(datasets_reg.shape[0], False), index=datasets_reg.index)
+        for _, partial_mask in expand_model_scenarios(blocks_with_mask, query, agg_scenarios, agg_years, datasets_reg):
+            scenarios_mask = scenarios_mask | partial_mask
+        return scenarios_mask
 
     def get_filter_values(self):
         res = {}

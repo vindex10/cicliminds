@@ -9,14 +9,16 @@ from cicliminds.backend.normalize import get_coarsest_grid
 from cicliminds.backend.normalize import normalize_calendar
 from cicliminds.backend.normalize import infer_common_time_axis
 from cicliminds.backend.normalize import align_time_axes
-from cicliminds.backend.normalize import regrid_model_group
+from cicliminds.backend.normalize import regrid_dataset_group
 
 
 def get_merged_dataset_by_query(datasets_reg, query):
     filtered_datasets_reg = get_datasets_for_block(datasets_reg, query)
     ordered_by_scenario_reg = order_reg_by_scenario(filtered_datasets_reg, query)
     datasets = read_datasets(ordered_by_scenario_reg)
-    merged_scenarios = merge_scenarios(datasets)
+    merged_time_axes = merge_time_axes(datasets)
+    standardized_datasets = standardize_datasets(merged_time_axes)
+    merged_scenarios = merge_scenarios(standardized_datasets)
     merged_models = list(merge_models(merged_scenarios))
     return merged_models[0][1]
 
@@ -44,36 +46,70 @@ def read_datasets(datasets_reg):
         yield (list_params, common_time_ds)
 
 
+def merge_time_axes(datasets):
+    for _, scenario_group_iter in groupby(datasets, key=lambda row: row[0][:-1]):
+        historical, rest = _separate_historical(scenario_group_iter)
+        if not historical:
+            yield from rest
+            return
+        hist_params, hist_data = historical
+        last_hist_date = hist_data.time.data[-1]
+        for params, dataset in rest:
+            cut_dataset = dataset.sel(time=slice(last_hist_date + 0.5, None))
+            # we assume that projection starts not later than the moment when historical scenario ends
+            merged = xr.concat([hist_data, cut_dataset], dim="time", data_vars="all", join="override")
+            merged.attrs["merged_from"] = ",".join(params)
+            *rest_params, scenario = params
+            new_params = rest_params + [f"historical_{scenario}"]
+            yield (new_params, merged)
+
+
+def _separate_historical(datasets):
+    historical = None
+    rest = []
+    for params, dataset in datasets:
+        scenario = params[-1]
+        if scenario == "historical":
+            historical = (params, dataset)
+            continue
+        rest.append((params, dataset))
+    return historical, rest
+
+
+def standardize_datasets(datasets):
+    param_group, dataset_group = zip(*datasets)
+    if len(dataset_group) <= 1:
+        yield from zip(param_group, dataset_group)
+        return
+    init_days, time_dim = infer_common_time_axis([m.time.data for m in dataset_group])
+    time_aligned = align_time_axes(dataset_group, init_days, time_dim)
+    lon, lat = get_coarsest_grid(dataset_group)
+    common_grid_dataset = regrid_dataset_group(time_aligned, lon, lat)
+    for param, dataset in zip(param_group, common_grid_dataset):
+        yield param, dataset
+
+
 def merge_scenarios(datasets):
     for _, scenario_group_iter in groupby(datasets, key=lambda row: row[0][:-1]):
-        try:
-            params, first_elem = next(scenario_group_iter)
-        except StopIteration as e:
-            # otherwise might just raise StopIteration when it should fail
-            raise Exception("something is wrong with scenario merging") from e
-        scenario_group = [first_elem]
-        last_date = first_elem.time.data[-1]
-        for sc in scenario_group_iter:
-            next_sc = sc[1].sel(time=slice(last_date + 0.5, None))
-            scenario_group.append(next_sc)
-            last_date = next_sc.time.data[-1]
-        # we assume that projection starts at the moment when historical scenario ends
-        merged = xr.concat(scenario_group, dim="time", data_vars="all", join="override")
-        merged.attrs["merged_from"] = ",".join(params)
-        yield (params[:-1], merged)
+        param_group, scenario_group = zip(*scenario_group_iter)
+        scenarios = [p[-1] for p in param_group]
+        if len(scenario_group) <= 1:
+            for params, dataset in zip(param_group, scenario_group):
+                yield params[:-1], dataset.expand_dims({"scenario": scenarios})
+            return
+        scenario_names_axis = pd.Series(scenarios, name="scenario")
+        merged = xr.concat(scenario_group, dim=scenario_names_axis, join="override")
+        yield (param_group[0][:-1], merged)
 
 
 def merge_models(datasets):
     for _, model_group_iter in groupby(datasets, key=lambda row: row[0][:1] + row[0][3:]):
         param_group, model_group = zip(*model_group_iter)
         model_names = [f"{p[1]}_{p[2]}" for p in param_group]
+        if len(model_group) <= 1:
+            for params, dataset in zip(param_group, model_group):
+                yield params[:-1], dataset.expand_dims({"model": model_names})
+            return
         model_names_axis = pd.Series(model_names, name="model")
-        if len(model_group) > 1:
-            init_days, time_dim = infer_common_time_axis([m.time.data for m in model_group])
-            time_aligned = align_time_axes(model_group, init_days, time_dim)
-            lon, lat = get_coarsest_grid(time_aligned)
-            common_grid_models = regrid_model_group(time_aligned, lon, lat)
-            merged = xr.concat(common_grid_models, dim=model_names_axis, join="override")
-        else:
-            merged = model_group[0].expand_dims({"model": model_names})
+        merged = xr.concat(model_group, dim=model_names_axis, join="override")
         yield (param_group[0][:1] + param_group[0][3:], merged)

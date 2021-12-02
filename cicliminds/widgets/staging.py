@@ -16,8 +16,10 @@ class StagingWidget(ObserverWidget):
     def __init__(self):
         self.state = {}
         self.state["select_regions"] = self._get_select_regions()
-        self.state["aggregate_years"] = Checkbox(description="years (scenarios)", value=True,
+        self.state["aggregate_years"] = Checkbox(description="years", value=True,
                                                  indent=False, layout={"width": "auto"})
+        self.state["aggregate_scenarios"] = Checkbox(description="scenarios", value=True,
+                                                     indent=False, layout={"width": "auto"})
         self.state["aggregate_regions"] = Checkbox(description="regions", value=True,
                                                    indent=False, layout={"width": "auto"})
         self.state["aggregate_models"] = Checkbox(description="models", value=True,
@@ -46,7 +48,8 @@ class StagingWidget(ObserverWidget):
             VBox([Label("Regions"), self.state["select_regions"]],
                  layout=block_layout),
             VBox([Label("Aggregate"),
-                  self.state["aggregate_years"], self.state["aggregate_regions"],
+                  self.state["aggregate_years"],
+                  self.state["aggregate_scenarios"], self.state["aggregate_regions"],
                   self.state["aggregate_models"], self.state["aggregate_model_ensembles"]],
                  layout=block_layout),
             VBox([Label("Plot type"), self.state["plot_types"],

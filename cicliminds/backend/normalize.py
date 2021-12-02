@@ -1,6 +1,4 @@
 import numpy as np
-import scipy as sp
-from scipy import stats
 import cftime
 from cicliminds_lib.bindings import cdo_remapcon_from_data
 
@@ -65,13 +63,13 @@ def infer_common_time_axis(time_axes):
     return init_days, time_dim
 
 
-def regrid_model_group(model_group, lon, lat):
+def regrid_dataset_group(dataset_group, lon, lat):
     res = []
-    for model in model_group:
-        cur_lon, cur_lat = model.lon.shape[0], model.lat.shape[0]
-        if (cur_lon == lon) or (cur_lat == lat):
-            res.append(model)
+    for dataset in dataset_group:
+        cur_lon, cur_lat = dataset.lon.shape[0], dataset.lat.shape[0]
+        if (cur_lon == lon) and (cur_lat == lat):
+            res.append(dataset)
             continue
-        regrided_model = cdo_remapcon_from_data(model, lon, lat)
-        res.append(regrided_model)
+        regrided_dataset = cdo_remapcon_from_data(dataset, lon, lat)
+        res.append(regrided_dataset)
     return res

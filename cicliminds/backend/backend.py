@@ -68,4 +68,6 @@ def add_plot_descriptions(fig, ax, dataset, plot_query):
     type_tag = f"{plot_query['plot_type']}{reference_tag}"
     title = f"{variable} [{type_tag}]"
     ax.set_title(title)
-    fig.text(0, 0, f"Index description: {description}\nRegions: {','.join(plot_query['regions'])}", wrap=True)
+    txt = fig.text(0, 0, f"Index description: {description}\nRegions: {', '.join(plot_query['regions'])}", wrap=True)
+    fig_width, _ = fig.get_size_inches()*fig.dpi
+    txt._get_wrap_line_width = lambda : fig_width*0.9

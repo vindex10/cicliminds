@@ -31,7 +31,9 @@ class FilterWidget(ObserverWidget):
         filter_values = self.get_filter_values()
         mask = get_shallow_filters_mask(self.datasets, filter_values)
         if np.count_nonzero(mask) < 200:
-            mask = mask & get_scenarios_mask(self.datasets, mask, agg_params["aggregate_years"], filter_values)
+            mask = mask & get_scenarios_mask(self.datasets, mask,
+                                             agg_params["aggregate_scenarios"], agg_params["aggregate_years"],
+                                             filter_values)
         return self.datasets[mask].copy()
 
     def get_filter_values(self):

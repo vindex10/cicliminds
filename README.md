@@ -41,6 +41,8 @@ The flow of producing the plot consists of several stages:
     Experimental functionality, for now only stores the plot on the server. To download it, user must have
     direct access to the server runnin the notebook.
 
+Have a look at the slides to see usage examples: https://github.com/vindex10/cicliminds/blob/master/docs/overview-slides.pdf
+
 
 ### Filter datasets
 

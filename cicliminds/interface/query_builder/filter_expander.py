@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from cicliminds.interface.datasets import apply_scenario_filter
+from cicliminds_lib.query.datasets import apply_scenario_filter
 from cicliminds.interface.query_builder.basic_expanders import expand_field
 from cicliminds.interface.query_builder.basic_expanders import drop_nonexisting_blocks
 from cicliminds.interface.query_builder.basic_expanders import reduce_values_to_existing

@@ -1,7 +1,7 @@
 from ipywidgets import Label, VBox, HBox, Button, SelectMultiple, Checkbox, IntText
 
 from cicliminds_lib.plotting.config import DEFAULT_RECIPE_CONFIG
-from cicliminds_lib.masks import REFERENCE_REGIONS
+from cicliminds_lib.mask.mask import REFERENCE_REGIONS
 from cicliminds.widgets.common import ObserverWidget
 from cicliminds.interface.plot_types import PLOT_TYPES_SPEC
 

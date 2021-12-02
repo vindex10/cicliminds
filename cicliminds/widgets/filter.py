@@ -5,7 +5,7 @@ import pandas as pd
 from ipywidgets import Label, VBox, HBox, Button, SelectMultiple
 
 from cicliminds.widgets.common import ObserverWidget
-from cicliminds.interface.datasets import get_shallow_filters_mask
+from cicliminds_lib.query.datasets import get_shallow_filters_mask
 from cicliminds.interface.query_builder.filter_expander import expand_model_scenarios
 
 

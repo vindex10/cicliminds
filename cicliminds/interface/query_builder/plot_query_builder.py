@@ -1,7 +1,7 @@
 from copy import deepcopy
 from dataclasses import asdict
 
-from cicliminds_lib.masks import REFERENCE_REGIONS
+from cicliminds_lib.mask.mask import REFERENCE_REGIONS
 
 from cicliminds.interface.query_builder.basic_expanders import expand_field
 from cicliminds.interface.plot_query_adapter import PlotQueryAdapter

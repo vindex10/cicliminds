@@ -74,6 +74,9 @@ Staging area is the main control panel of the App. Here you specify:
 * Specify how to *aggregate datasets*:
     - **years** — stack selected projection scenarios after historical. As a result as many plots
         will be produced as projection scenarios selected, each of them prepended with historical (if selected)
+    - **scenarios** — produce one plot with all the scenarios contributed to it. When historical is present,
+        it will be prepended ot each of the projections. This option is identical to **years** when only historical and
+        one projection was chosen. If both, **scenarios** and **years** are ON, **scenarios** will be used
     - **regions** - all selected regions will be present in one plot. When unchecked, one plot per region will be produced
     - **models** - data points of all selected models will be pulled together. As part of this action, datasets will be 
         downscaled to the coarsed grid among all selected datasets, and time axes will be aligned to each other.
@@ -85,8 +88,12 @@ Staging area is the main control panel of the App. Here you specify:
         of the variable over the time ranges. (experimental, not yet fully supported)
     - **fldmean last** - first produce histograms of the variable over the time range, for each grid point,
         then do weighted mean over the globe.
-    - **avg time** — histogram over earth grid points of values of the variable averaged over
-        the time range. (experimental, not yet fully supported)
+    - **mean val** - heatmap of the mean value of the variable. Mean is computed over the last `sliding window size` points
+        on time axis. When `subtract reference` is chosen, mean over the reference period will be subtracted.
+        To aggregate models and scenarios we apply median.
+    - **time series** - plot time dependency of the variable. Before applying model median, curves are smoothed with
+        `sliding window size` moving average. Mean value over `reference window size` can be subtracted from each grid
+        cell prior to the computation of the fldmean.
 * Plot modifiers:
     - **subtract reference** — hide the reference histogram, and subtract it from all the consequent ones
     - **normalize histograms** - when the reference time range differs from the sliding window size, histograms

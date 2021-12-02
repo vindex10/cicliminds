@@ -17,6 +17,10 @@ Provide path to the data, and make sure `cicliminds` package is accessible from 
 DATA_DIR="path/to/data" PYTHONPATH="`pwd`" jupyter lab .
 ```
 
+This repository is supposed to be a user interface, while all the logic and data processing is handled by Libs:
+
+https://github.com/vindex10/cicliminds-lib
+
 ## Usage
 
 The flow of producing the plot consists of several stages:

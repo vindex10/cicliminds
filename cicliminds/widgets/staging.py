@@ -13,7 +13,8 @@ class StagingWidget(ObserverWidget):
                 "slide_step": DEFAULT_RECIPE_CONFIG["slide_step"],
                 "normalize_histograms": DEFAULT_RECIPE_CONFIG["normalize_histograms"]}
 
-    def __init__(self):
+    def __init__(self, model_weights):
+        self.model_weights = model_weights.copy()
         self.state = {}
         self.state["select_regions"] = self._get_select_regions()
         self.state["aggregate_years"] = Checkbox(description="years", value=True,
@@ -24,7 +25,9 @@ class StagingWidget(ObserverWidget):
                                                    indent=False, layout={"width": "auto"})
         self.state["aggregate_models"] = Checkbox(description="models", value=True,
                                                   indent=False, layout={"width": "auto"})
-        self.state["aggregate_model_ensembles"] = Checkbox(description="model ensembles (init_params)", value=True,
+        self.state["aggregate_model_ensembles"] = Checkbox(description="model ensembles", value=True,
+                                                           indent=False, layout={"width": "auto"})
+        self.state["aggregate_model_weights"] = Checkbox(description="model weights", value=True,
                                                            indent=False, layout={"width": "auto"})
         self.state["plot_types"] = SelectMultiple(options=list(PLOT_TYPES_SPEC), value=(self.DEFAULTS["plot_type"],),
                                                   rows=6, layout={"width": "auto"})
@@ -33,6 +36,8 @@ class StagingWidget(ObserverWidget):
         self.state["normalize_histograms"] = Checkbox(description="Normalize histograms",
                                                       indent=False, value=self.DEFAULTS["normalize_histograms"],
                                                       layout={"width": "auto"})
+        self.state["model_weights"] = SelectMultiple(options=list(self.model_weights["name"]), value=[],
+                                                     rows=10, layout={"width": "auto"})
         self.state["reference_window_size"] = IntText(value=self.DEFAULTS["reference_window_size"],
                                                       layout={"width": "auto"})
         self.state["sliding_window_size"] = IntText(value=self.DEFAULTS["sliding_window_size"],
@@ -50,10 +55,13 @@ class StagingWidget(ObserverWidget):
             VBox([Label("Aggregate"),
                   self.state["aggregate_years"],
                   self.state["aggregate_scenarios"], self.state["aggregate_regions"],
-                  self.state["aggregate_models"], self.state["aggregate_model_ensembles"]],
+                  self.state["aggregate_models"], self.state["aggregate_model_ensembles"],
+                  self.state["aggregate_model_weights"]],
                  layout=block_layout),
             VBox([Label("Plot type"), self.state["plot_types"],
                   self.state["subtract_reference"], self.state["normalize_histograms"]],
+                 layout=block_layout),
+            VBox([Label("Model weights"), self.state["model_weights"]],
                  layout=block_layout),
             VBox([Label("Reference window size"), self.state["reference_window_size"],
                   Label("Sliding window size"), self.state["sliding_window_size"],

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8dfb787bcd1f6103d4888408ead9d2e7285e6bc58b30c090299d32d3d2fd78e7"
+            "sha256": "54d382e080b60d443eaf0c8d1e56fdd52e9176b039e18fe36b3b32495e59bbdd"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -187,15 +187,15 @@
         },
         "charset-normalizer": {
             "hashes": [
-                "sha256:735e240d9a8506778cd7a453d97e817e536bb1fc29f4f6961ce297b9c7a917b0",
-                "sha256:83fcdeb225499d6344c8f7f34684c2981270beacc32ede2e669e94f7fa544405"
+                "sha256:1eecaa09422db5be9e29d7fc65664e6c33bd06f9ced7838578ba40d58bdf3721",
+                "sha256:b0b883e8e874edfdece9c28f314e3dd5badf067342e42fb162203335ae61aa2c"
             ],
             "markers": "python_version >= '3'",
-            "version": "==2.0.8"
+            "version": "==2.0.9"
         },
         "cicliminds-lib": {
             "git": "https://github.com/vindex10/cicliminds-lib",
-            "ref": "399be2dd0e634aa4328e4713ed7c586ca5568c65"
+            "ref": "0696d85d033c6a63ff9692b7c0c1834e2b1a8b6c"
         },
         "click": {
             "hashes": [
@@ -237,6 +237,9 @@
             "version": "==0.11.0"
         },
         "dask": {
+            "extras": [
+                "array"
+            ],
             "hashes": [
                 "sha256:2b0ad7beba8950add4fdc7c5cb94fa9444915ddb00c711d5743e2c4bb0a95ef5",
                 "sha256:e12bfe272928d62fa99623d98d0e0b0c045b33a47509ef31a22175aa5fd10917"
@@ -311,11 +314,11 @@
         },
         "fonttools": {
             "hashes": [
-                "sha256:dca694331af74c8ad47acc5171e57f6b78fac5692bf050f2ab572964577ac0dd",
-                "sha256:eff1da7ea274c54cb8842853005a139f711646cbf6f1bcfb6c9b86a627f35ff0"
+                "sha256:ca6ecc67e5a5620d31754f92147f22f48fd5461fd3fafe6afe031aa9ee079b0f",
+                "sha256:edb48922873d3fda489ab400bd40888ac239ae8070b53f494b839bcdff0d01f6"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==4.28.2"
+            "version": "==4.28.3"
         },
         "fsspec": {
             "hashes": [
@@ -354,7 +357,7 @@
                 "sha256:cb6aef731bf708a7727ab6cde8df87f0281b1427d41e65d62d4b68934fa54e97",
                 "sha256:fc60ef843e0863dd4e24ab2bb5698f071031332801ecf8d1aeb4fb622056545c"
             ],
-            "markers": "python_version >= '3.7'",
+            "markers": "python_version >= '3.3'",
             "version": "==7.30.1"
         },
         "ipython-genutils": {
@@ -1168,11 +1171,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:b4c634615a0cf5b02cf83c7bedffc8da0ca439f00e79452699454da6fbd4153d",
-                "sha256:feb5ff19b354cde9efd2344ef6d5e79880ce4be643037641b49508bbb850d060"
+                "sha256:6d10741ff20b89cd8c6a536ee9dc90d3002dec0226c78fb98605bfb9ef8a7adf",
+                "sha256:d144f85102f999444d06f9c0e8c737fd0194f10f2f7e5fdb77573f6e2fa4fad0"
             ],
             "markers": "python_version >= '3.6'",
-            "version": "==59.4.0"
+            "version": "==59.5.0"
         },
         "setuptools-scm": {
             "hashes": [
@@ -1367,11 +1370,11 @@
         },
         "xhistogram": {
             "hashes": [
-                "sha256:c428137c4dcacd42cf537d13afb501fd49502f9cb138fd568d8a0a74a64417b0",
-                "sha256:d90c311d38bb0332eb363f6cf8b7398635ac4b4063cf7e86259cff8f951f63f4"
+                "sha256:949e31126923ebd24f2c506f45d6c6d9fcc1661f2a9e441f212efff25c71c907",
+                "sha256:eb5763370ab09afe34196bd06fc86af6eca8cfd67830974f090022824de3c495"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==0.3.0"
+            "version": "==0.3.1"
         }
     },
     "develop": {}

@@ -19,7 +19,7 @@ def expand_filters(datasets, filter_values, agg_params):
     blocks_with_mask = expand_model_scenarios(blocks_with_mask, filter_values,
                                               agg_params["aggregate_years"], agg_params["aggregate_scenarios"],
                                               datasets)
-    yield from blocks_with_mask
+    yield from (block for block, _ in blocks_with_mask)
 
 
 def expand_model_field(blocks_with_mask, field, filter_values, agg, datasets):

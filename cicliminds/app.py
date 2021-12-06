@@ -19,8 +19,9 @@ from cicliminds.backend import process_block_query
 
 
 class App:  # pylint: disable=too-few-public-methods
-    def __init__(self, datasets):
+    def __init__(self, datasets, model_weights):
         self.datasets = datasets
+        self.model_weights = model_weights
         self.state = {}
         self.state["filter_widget"] = self._get_filter_widget()
         self.state["filtered_widget"] = FilteredWidget()
@@ -35,7 +36,7 @@ class App:  # pylint: disable=too-few-public-methods
         return filter_widget
 
     def _get_staging_widget(self):
-        staging_widget = StagingWidget()
+        staging_widget = StagingWidget(self.model_weights)
         staging_widget.observe(self._stage_action)
         return staging_widget
 
@@ -102,7 +103,7 @@ class App:  # pylint: disable=too-few-public-methods
             return
         query = block_widget.get_query()
         fig, ax = plt.subplots()
-        process_block_query(fig, ax, self.datasets, query)
+        process_block_query(fig, ax, query, self.datasets, self.model_weights)
         block_widget.replace_real_output(fig)
         with block_widget.capture_output():
             clear_output()

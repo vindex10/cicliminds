@@ -2,13 +2,13 @@ import os
 import json
 import matplotlib.pyplot as plt
 from cicliminds_lib.query.files import get_datasets
-from cicliminds.backend.backend import process_block_query
+from cicliminds.backend import process_block_query
 
 
 def main(data_dir, query):
     dataset = get_datasets(data_dir)
     fig, ax = plt.subplots()
-    process_block_query(fig, ax, dataset, query)
+    process_block_query(fig, ax, query, dataset, None)
     fig.savefig("figure.png")
 
 

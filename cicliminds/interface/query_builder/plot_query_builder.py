@@ -48,7 +48,7 @@ def expand_plot_types(queries, plot_types):
 
 def append_plot_query_defaults(input_query, plot_query):
     plot_recipe = get_plot_recipe_by_query(plot_query)
-    plot_config_defaults = asdict(plot_recipe.get_default_config(input_query["variable"][0]))
+    plot_config_defaults = asdict(plot_recipe.get_default_config(input_query["datasets"]["variable"][0]))
     plot_config_defaults.update(plot_query)
     plot_query_defaults = PlotQueryAdapter.to_json(deepcopy(plot_config_defaults), restrictive=False)
     return plot_query_defaults

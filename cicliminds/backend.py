@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import cftime
 
 from cicliminds_lib.unify.api import get_merged_dataset_by_query
+from cicliminds_lib.unify.api import get_merged_model_weights_by_query
 from cicliminds_lib.mask.api import get_dataset_mask_by_query
 from cicliminds_lib.plotting._helpers import _get_variable_name
 
@@ -9,20 +10,23 @@ from cicliminds.interface.plot_types import get_plot_recipe_by_query
 from cicliminds.interface.plot_query_adapter import PlotQueryAdapter
 
 
-def process_block_query(fig, ax, datasets_reg, query):
+def process_block_query(fig, ax, query, datasets_reg, model_weights_reg):
     input_query, plot_query = query["input_query"], query["plot_query"]
-    datasets = get_merged_dataset_by_query(datasets_reg, input_query)
-    mask = get_dataset_mask_by_query(datasets, plot_query)
-    masked_dataset = datasets.where(mask)
-    plot_datasets(fig, ax, masked_dataset, plot_query)
+    inputs = {
+        "datasets": get_merged_dataset_by_query(datasets_reg, input_query["datasets"]),
+        "model_weights": get_merged_model_weights_by_query(model_weights_reg, input_query.get("model_weights", {}))
+    }
+    mask = get_dataset_mask_by_query(inputs["datasets"], plot_query)
+    inputs["datasets"] = inputs["datasets"].where(mask)
+    plot_datasets(fig, ax, plot_query, inputs)
 
 
-def plot_datasets(fig, ax, masked_dataset, plot_query):
+def plot_datasets(fig, ax, plot_query, inputs):
     plot_recipe = get_plot_recipe_by_query(plot_query)
-    recipe_config = get_recipe_config(plot_query, masked_dataset)
-    plot_recipe.plot(ax, masked_dataset, recipe_config)
+    recipe_config = get_recipe_config(plot_query, inputs["datasets"])
+    plot_recipe.plot(ax, recipe_config, inputs)
     ax.set_position((0, 0.25, 1, 0.85))
-    add_plot_descriptions(fig, ax, masked_dataset, plot_query)
+    add_plot_descriptions(fig, ax, plot_query, inputs)
     plt.close()
 
 
@@ -38,7 +42,8 @@ def annotate_plot_query(plot_query, masked_dataset):
                                               masked_dataset.time.attrs["calendar"]).year
 
 
-def add_plot_descriptions(fig, ax, dataset, plot_query):
+def add_plot_descriptions(fig, ax, plot_query, inputs):
+    dataset = inputs["datasets"]
     variable = _get_variable_name(dataset)
     variable_data = dataset[variable]
     description = variable_data.long_name

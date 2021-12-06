@@ -1,11 +1,10 @@
 from dataclasses import fields
-import numpy as np
 from cicliminds_lib.plotting.config import RecipeConfig
 
 
 class UnitFactorConverter:
     KEYWORDS = {
-        "day": np.timedelta64(1, 'D')
+        "day": 1
     }
 
     @classmethod

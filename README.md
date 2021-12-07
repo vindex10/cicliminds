@@ -17,6 +17,14 @@ Provide path to the data, and make sure `cicliminds` package is accessible from 
 DATA_DIR="path/to/data" PYTHONPATH="`pwd`" jupyter lab .
 ```
 
+To make model weights available, provide path to model weight files:
+
+```
+DATA_DIR="path/to/data" MODEL_WEIGHTS_DIR="path/to/model_weights/" PYTHONPATH="`pwd`" jupyter lab .
+```
+
+Read more on preparing and using model weights below.
+
 This repository is supposed to be a user interface, while all the logic and data processing is handled by Libs:
 
 https://github.com/vindex10/cicliminds-lib
@@ -90,8 +98,6 @@ Staging area is the main control panel of the App. Here you specify:
     - **model ensembles** - `init_params` will be pulled together. May introduce imbalance, if one model has much larger
         set of present ensemble members
 * Plot type:
-    - **fldmean first** - first do weighted mean over the globe, then produce histogram
-        of the variable over the time ranges. (experimental, not yet fully supported)
     - **fldmean last** - first produce histograms of the variable over the time range, for each grid point,
         then do weighted mean over the globe.
     - **mean val** - heatmap of the mean value of the variable. Mean is computed over the last `sliding window size` points
@@ -104,6 +110,8 @@ Staging area is the main control panel of the App. Here you specify:
     - **subtract reference** — hide the reference histogram, and subtract it from all the consequent ones
     - **normalize histograms** - when the reference time range differs from the sliding window size, histograms
         will need to be normalized in order to be comparable
+* Model weights. Select one or several model weights that will be applied to models during aggregation. In this case, models
+    that are not listed in weights file will get weight `0`.
 * Sliding window parameters (measured in point on the time axis):
     - **reference window size** - initial histogram can be produced on the larger time range than consequent ones
     - **sliding window size** - width of the window that will slide, to produce consequent histograms
@@ -138,6 +146,19 @@ paste and click `Stage` in this panel.
 
 Experimental option `Save PDF` stores the PDF containing all the plots on the machine that is running the app.
 The path to the stored PDF will be shown in the text field.
+
+
+### Model weights preparation
+
+Model weights are read from `MODEL_WEIGHTS_DIR`. They should be stored in the files named `model_weight_name.tsv`.
+Model weight file should contain 4 columns:
+
+`model`, `init_param`, `scenario`, `weight`
+
+Commented `#` lines are ignored. For now, only model column is used to assign weights.
+
+Example of the script that prepares valid weights file:
+https://github.com/vindex10/cicliminds-lib/blob/master/scripts/nc_model_weights_to_tsv.py
 
 
 ## Technical design

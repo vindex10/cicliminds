@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import cftime
 
-from cicliminds_lib.unify.api import get_merged_dataset_by_query
-from cicliminds_lib.unify.api import get_merged_model_weights_by_query
+from cicliminds_lib.unify.api import get_merged_inputs_by_query
 from cicliminds_lib.mask.api import get_dataset_mask_by_query
 from cicliminds_lib.plotting._helpers import _get_variable_name
 
@@ -12,10 +11,11 @@ from cicliminds.interface.plot_query_adapter import PlotQueryAdapter
 
 def process_block_query(fig, ax, query, datasets_reg, model_weights_reg):
     input_query, plot_query = query["input_query"], query["plot_query"]
-    inputs = {
-        "datasets": get_merged_dataset_by_query(datasets_reg, input_query["datasets"]),
-        "model_weights": get_merged_model_weights_by_query(model_weights_reg, input_query.get("model_weights", {}))
+    input_regs = {
+        "datasets": datasets_reg,
+        "model_weights": model_weights_reg
     }
+    inputs = get_merged_inputs_by_query(input_regs, input_query)
     mask = get_dataset_mask_by_query(inputs["datasets"], plot_query)
     inputs["datasets"] = inputs["datasets"].where(mask)
     plot_datasets(fig, ax, plot_query, inputs)

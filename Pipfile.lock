@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "54d382e080b60d443eaf0c8d1e56fdd52e9176b039e18fe36b3b32495e59bbdd"
+            "sha256": "ed77ff61a418317109d8cdd13c848233d81aeb12aca1a38b578703b6b513aa57"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -195,7 +195,7 @@
         },
         "cicliminds-lib": {
             "git": "https://github.com/vindex10/cicliminds-lib",
-            "ref": "0696d85d033c6a63ff9692b7c0c1834e2b1a8b6c"
+            "ref": "45a239cc55b7af6e6f083e654457e42d41d77ce5"
         },
         "click": {
             "hashes": [
@@ -424,11 +424,11 @@
         },
         "jupyter-server": {
             "hashes": [
-                "sha256:93a84d06c35613ecf3bc5de8ff2d92a410a3a5f57a3a23444ca75e4b2b390209",
-                "sha256:f71e10ebaa6704a1e0fe76ec70a16a0804ab5a9d268f0c512e8c69086a8e86d1"
+                "sha256:05a96dfc5352adf70e88868b4ab3d1fc13e17bd84daf74d02cc6299098855fda",
+                "sha256:608c0cb0cbbaa96a413c4d2427ca77acd14180251a2687831cf31f7648eaa835"
             ],
             "markers": "python_version >= '3.6'",
-            "version": "==1.12.1"
+            "version": "==1.13.0"
         },
         "jupyterlab": {
             "hashes": [
@@ -1347,11 +1347,11 @@
         },
         "websocket-client": {
             "hashes": [
-                "sha256:0133d2f784858e59959ce82ddac316634229da55b498aac311f1620567a710ec",
-                "sha256:8dfb715d8a992f5712fff8c843adae94e22b22a99b2c5e6b0ec4a1a981cc4e0d"
+                "sha256:1315816c0acc508997eb3ae03b9d3ff619c9d12d544c9a9b553704b1cc4f6af5",
+                "sha256:2eed4cc58e4d65613ed6114af2f380f7910ff416fc8c46947f6e76b6815f56c0"
             ],
             "markers": "python_version >= '3.6'",
-            "version": "==1.2.1"
+            "version": "==1.2.3"
         },
         "widgetsnbextension": {
             "hashes": [
